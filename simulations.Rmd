@@ -1,0 +1,533 @@
+---
+title: "Covariates subset and finite samples"
+author:
+  - Bénédicte Colnet [Inria, Paris-Saclay]
+date: "September 2021"
+output:
+  html_document:
+    code_folding: "hide"
+    number_sections: no
+    toc: yes
+    toc_depth: 2
+  pdf_document:
+    toc: yes
+abstract: | 
+  This notebook follows Judith's analysis on AIPW. 
+---
+
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+# Reproducibility
+set.seed(123)
+
+# Libraries
+library(dplyr) # case_when and others
+library(ggplot2)
+library(tidyr) # pivot
+library(grf)
+library(glmnet)
+library(ranger) # efficient forest
+library(splines) # function bs() for splines
+
+
+# simulation set up according to Wager & Nie
+generate_simulation <- function(n = 1000, p = 12, setup = "D"){
+  
+  # set-ups
+  if (setup == "D"){
+    X = matrix(rnorm(n*p), n, p)
+    b = (pmax(X[,2] + X[,3] + X[,4], 0) + pmax(X[,5] + X[,6], 0)) / 2
+    e = 1/(1 + exp(-X[,1]) + exp(-X[,2] + exp(-X[,3])))
+    tau = pmax(X[,2] + X[,3] + X[,4], 0) - pmax(X[,5] + X[,6], 0)
+    
+  } else if (setup == "A") {
+    X = matrix(runif(n*p, min=0, max=1), n, p)
+    b = sin(pi * X[,2] * X[,3]) + 2 * (X[,4] - 0.5)^2 + X[,5] + 0.5 * X[,6]
+    eta = 0.1
+    e = pmax(eta, pmin(sin(pi * X[,1] * X[,2] * X[,3]), 1-eta))
+    tau = (X[,3] + X[,4]) / 2
+  } else {
+    print("Wrong setup.")
+    break
+  }
+  
+  
+  # complete potential outcomes, treatment, and observed outcome
+  simulation <- data.frame(X = X, b = b, tau = tau, e = e)
+  simulation$Y_0 <- simulation$b - 0.5*simulation$tau + rnorm(n, mean = 0, sd = 0.1)
+  simulation$Y_1 <- simulation$b + 0.5*simulation$tau + rnorm(n, mean = 0, sd = 0.1)
+  simulation$A <- rbinom(n, size = 1, prob = simulation$e)
+  simulation$Y <- ifelse(simulation$A == 1, simulation$Y_1, simulation$Y_0)
+  
+  return(simulation)
+}
+
+# Empirically compute true ATEs
+a_big_simulation <- generate_simulation(n = 500000, setup = "D")
+ATE_D <- mean(a_big_simulation$Y_1) - mean(a_big_simulation$Y_0)
+
+a_big_simulation <- generate_simulation(n = 500000, setup = "A")
+ATE_A <- mean(a_big_simulation$Y_1) - mean(a_big_simulation$Y_0)
+
+ATE <- c("A" = ATE_A, "D" = ATE_D)
+
+# toy simulation
+a_simulation <- generate_simulation()
+```
+
+
+```{r}
+T_learner <- function(covariates_names_vector, 
+                      dataframe,
+                      output_name = "Y", 
+                      treatment_name = "W",
+                      nuisance = "linear",  # "forest
+                      crossfit = 2){
+  
+    # prepare cross-fitting
+    n <- nrow(dataframe)
+    indices <- split(seq(n), sort(seq(n) %% crossfit))
+
+    X = dataframe[,covariates_names_vector]
+
+    mu.hat.1 <- rep(NA, n)
+    mu.hat.0 <- rep(NA, n)
+    
+    # write corresponding formula model
+    formula <- paste(output_name, paste(covariates_names_vector, collapse="+"), sep="~")
+    
+    # cross-fitting of nuisance parameters
+    for (idx in indices) {
+      if (nuisance == "linear"){
+        # Fitting
+        mu_1_hat <- lm(formula, dataframe[-idx & dataframe[,treatment_name]  == 1,])
+        mu_0_hat <- lm(formula, dataframe[-idx & dataframe[,treatment_name]  == 0,])
+        # Prediction
+        mu.hat.1[idx] <- predict(mu_1_hat, newdata = X[idx,], type = "response")
+        mu.hat.0[idx] <- predict(mu_0_hat, newdata = X[idx,], type="response")
+      } else if (nuisance == "forest"){
+        # Fitting
+        mu_1_hat <- ranger(formula, data = dataframe[-idx & dataframe[,treatment_name]  == 1,])
+        mu_0_hat <- ranger(formula, data = dataframe[-idx & dataframe[,treatment_name]  == 0,])
+        # Prediction
+        mu.hat.1[idx] <- predict(mu_1_hat, data = X[idx,])$predictions
+        mu.hat.0[idx] <- predict(mu_0_hat, data = X[idx,])$predictions
+      } else {
+        print("Error in nuisance.")
+        break
+      }
+    }
+
+    # compute estimate
+    estimate <- mean(mu.hat.1) - mean(mu.hat.0)
+    return(estimate)
+}
+
+
+S_learner <- function(covariates_names_vector, 
+                      output_name, 
+                      treatment_name,
+                      dataframe,
+                      nuisance = "linear",  # "forest
+                      crossfit = 2){
+  
+    # prepare cross-fitting
+    n <- nrow(dataframe)
+    indices <- split(seq(n), sort(seq(n) %% crossfit))
+
+    X = dataframe[,covariates_names_vector]
+
+    mu.hat.1 <- rep(NA, n)
+    mu.hat.0 <- rep(NA, n)
+
+    xt0 <- X
+    xt1 <- X
+    xt0[, treatment_name] <- rep(0, n)
+    xt1[, treatment_name] <- rep(1, n)
+    
+
+    # cross-fitting of nuisance parameters
+    for (idx in indices) {
+      if (nuisance == "linear"){
+        # write corresponding formula model
+        formula <- paste(output_name, paste(paste0("(", paste(covariates_names_vector, collapse="+"), ")") , treatment_name, sep = "*"), sep="~")
+        # Fitting
+        mu_hat <- lm(formula, dataframe[-idx,])
+        # Prediction
+        mu.hat.1[idx] <- predict(mu_hat, newdata = xt1[idx,], type = "response")
+        mu.hat.0[idx] <- predict(mu_hat, newdata = xt0[idx,], type="response")
+      }
+      else if(nuisance == "forest"){
+        # write corresponding formula model
+        formula <- paste0(output_name, "~.")
+        # Fitting
+        mu_hat <- ranger(formula, data = dataframe[-idx, c(covariates_names_vector, treatment_name, output_name)])
+        # Prediction
+        mu.hat.1[idx] <- predict(mu_hat, data = xt1[idx,])$predictions
+        mu.hat.0[idx] <- predict(mu_hat, data = xt0[idx,])$predictions
+      }
+      else {
+        print("Error in nuisance.")
+        break
+      }
+    }
+    estimate <- mean(mu.hat.1) - mean(mu.hat.0)
+    return(estimate)
+}
+
+# # How to launch the function
+# S_learner(paste0("X.", 1:5) , "Y", "A", dataframe = a_simulation, nuisance = "forest")
+```
+
+```{r}
+# # Small empirical simulation on the power of cross fitting.
+# results <- data.frame("number.of.splits" = c(),
+#                       "estimate" = c())
+# 
+# for (splits in 2:10){
+#   for (i in 1:30){
+#     a_simulation <- generate_simulation(setup = "A")
+#     estimate <- T_learner(paste0("X.", 1:12) , "Y", "A", dataframe = a_simulation)
+#     new_row <- data.frame("number.of.splits" =splits,
+#                           "estimate" = estimate)
+#     results <- rbind(results, new_row)
+#   }
+# }
+# 
+# ggplot(results, aes(x = as.factor(number.of.splits), y = estimate)) +
+#   geom_boxplot() +
+#   theme_minimal() +
+#   geom_hline(yintercept = ATE["A"], color = "blue", alpha = 0.5)
+```
+
+
+```{r}
+# smart wrapper for causal forest
+causal_forest_smart_wrapper <- function(covariates_names_vector_treatment, 
+                        covariates_names_vector_outcome,
+                        dataframe,
+                        outcome_name = "Y",
+                        treatment_name = "A",
+                        n.folds = 2){
+  
+    n <- nrow(X)
+    indices <- split(seq(n), sort(seq(n) %% n.folds))
+    
+    t0 = rep(0, n)
+    t1 = rep(1, n)
+    
+    X_t <- dataframe[, covariates_names_vector_treatment]
+    X_o <- dataframe[, covariates_names_vector_outcome]
+    W <- dataframe[, treatment_name]
+    Y <- dataframe[, outcome_name]
+
+    mu.hat <- rep(NA, n)
+    e.hat <- rep(NA, n)
+    
+    # cross-fitting of nuisance parameters
+    for (idx in indices) {
+      # Estimation
+      outcome.model <- regression_forest(X_o[-idx,], Y[-idx], num.trees = 100, min.node.size = 5)
+      propensity.model <- probability_forest( X_t[-idx,], as.factor(W[-idx]), num.trees = 100, min.node.size=10)
+        
+      # Prediction
+      mu.hat[idx] <- predict(outcome.model, data = X_o[idx,])$predictions
+      e.hat[idx] <- predict(propensity.model, data = X_t[idx,])$predictions[,2]
+    }
+    forest <- causal_forest(
+                X=X_o,  
+                W=W,
+                Y=Y,
+                Y.hat = mu.hat,
+                W.hat = e.hat,
+                num.trees = 100)
+    forest.ate <- average_treatment_effect(forest)
+    return(forest.ate[[1]])
+}
+  
+causal_forest_wrapper <- function(covariates_names_vector, 
+                        dataframe,
+                        outcome_name = "Y",
+                        treatment_name = "A",
+                        n.folds = 2){
+  
+  forest <- causal_forest(
+                X=dataframe[, covariates_names_vector],  
+                W=dataframe[, treatment_name],
+                Y=dataframe[, outcome_name],
+                num.trees = 100)
+  forest.ate <- average_treatment_effect(forest)
+  return(forest.ate[[1]])
+}
+
+causal_forest_wrapper(paste0("X.", 1:5),
+                           dataframe = a_simulation)
+```
+
+
+```{r}
+# smart AIPW with forest
+aipw_forest <- function(covariates_names_vector_treatment, 
+                        covariates_names_vector_outcome,
+                        dataframe,
+                        outcome_name = "Y",
+                        treatment_name = "A",
+                        n.folds = 2,
+                        min.node.size.if.forest = 5) {
+  
+    n <- nrow(X)
+    indices <- split(seq(n), sort(seq(n) %% n.folds))
+    
+    t0 = rep(0, n)
+    t1 = rep(1, n)
+    
+    X_t <- dataframe[, covariates_names_vector_treatment]
+    X_o <- dataframe[, covariates_names_vector_outcome]
+    W <- dataframe[, treatment_name]
+    Y <- dataframe[, outcome_name]
+    
+    xt <- cbind(X_o, W)
+    xt0 <- cbind(X_o, t0)
+    xt1 <- cbind(X_o, t1)
+
+    mu.hat.1 <- rep(NA, n)
+    mu.hat.0 <- rep(NA, n)
+    e.hat <- rep(NA, n)
+    
+    # cross-fitting of nuisance parameters
+    for (idx in indices) {
+      # Estimation
+      outcome.model <- regression_forest(xt[-idx,], Y[-idx], num.trees = 100, min.node.size = min.node.size.if.forest)
+      propensity.model <- probability_forest( X_t[-idx,], as.factor(W[-idx]), num.trees = 100, min.node.size=10)
+        
+      # Prediction
+      mu.hat.1[idx] <- predict(outcome.model, data = xt1[idx,])$predictions
+      mu.hat.0[idx] <- predict(outcome.model, data = xt0[idx,])$predictions
+      e.hat[idx] <- predict(propensity.model, data = X_t[idx,])$predictions[,2]
+    }
+    
+    # compute estimates
+    aipw = mean(mu.hat.1 - mu.hat.0
+           + W / e.hat * (Y -  mu.hat.1)
+           - (1 - W) / (1 - e.hat) * (Y -  mu.hat.0))
+    
+    ipw = mean(Y * (W/e.hat - (1-W)/(1-e.hat)))
+    
+    #g_formula = mean(mu.hat.1) - mean(mu.hat.0)
+    
+    res = c("aipw" = aipw,
+            "ipw" = ipw)
+    
+    return(res)
+}
+
+
+# smart AIPW with splines
+aipw_splines <- function(covariates_names_vector_treatment,
+                         covariates_names_vector_outcome,
+                         dataframe,
+                         outcome_name = "Y",
+                         treatment_name = "A",
+                         n.folds = 2){
+  
+  n <- nrow(dataframe)
+  indices <- split(seq(n), sort(seq(n) %% n.folds))
+  
+  # Preparing data
+  W <- dataframe[,treatment_name]
+  Y <- dataframe[,outcome_name]
+  
+  fmla.xw <- formula(paste("~ 0 +", paste0("bs(", covariates_names_vector_treatment, ", df=3)", "*", treatment_name, collapse=" + ")))
+  XW <- model.matrix(fmla.xw, dataframe)
+  data.1 <- dataframe
+  data.1[,treatment_name] <- 1
+  XW1 <- model.matrix(fmla.xw, data.1)  # setting W=1
+  data.0 <- dataframe
+  data.0[,treatment_name] <- 0
+  XW0 <- model.matrix(fmla.xw, data.0)  # setting W=0
+  fmla.x <- formula(paste(" ~ 0 + ", paste0("bs(", covariates_names_vector_outcome, ", df=3)", collapse=" + ")))
+  XX <- model.matrix(fmla.x, dataframe)
+  
+  penalty.factor <- rep(1, ncol(XW))
+  penalty.factor[colnames(XW) == treatment_name] <- 0
+  
+  # Cross-fitted estimates of E[Y|X,W=1], E[Y|X,W=0] and e(X) = P[W=1|X]
+  mu.hat.1 <- rep(NA, n)
+  mu.hat.0 <- rep(NA, n)
+  e.hat <- rep(NA, n)
+  for (idx in indices) {
+    # Estimate outcome model and propensity models
+    # Note how cross-validation is done (via cv.glmnet) within cross-fitting!
+    outcome.model <- cv.glmnet(x=XW[-idx,], y=Y[-idx], family="gaussian", penalty.factor=penalty.factor)
+    propensity.model <- cv.glmnet(x=XX[-idx,], y=W[-idx], family="binomial")
+  
+    # Predict with cross-fitting
+    mu.hat.1[idx] <- predict(outcome.model, newx=XW1[idx,], type="response")
+    mu.hat.0[idx] <- predict(outcome.model, newx=XW0[idx,], type="response")
+    e.hat[idx] <- predict(propensity.model, newx=XX[idx,], type="response")
+  }
+  
+  # Compute the summand in AIPW estimator
+  aipw <- (mu.hat.1 - mu.hat.0
+                  + W / e.hat * (Y -  mu.hat.1)
+                  - (1 - W) / (1 - e.hat) * (Y -  mu.hat.0))
+  aipw <- mean(aipw)
+  
+  ipw = mean(Y * (W/e.hat - (1-W)/(1-e.hat)))
+  
+  res = c("aipw" = aipw,
+            "ipw" = ipw)
+  
+  return(res)
+  
+}
+
+
+an_estimate <- aipw_splines(paste0("X.", 1:3),
+                           paste0("X.", 1:5),
+                           dataframe = a_simulation)
+```
+
+
+
+
+```{r}
+results <- data.frame("sample.size" = c(),
+                      "estimate" = c(),
+                      "estimator" = c(),
+                      "subset" = c())
+
+different_subset_tested <- c("all.covariates", "minimal.set", "smart")
+
+for (sample.size in c(100, 300, 1000, 3000)){
+  print(paste0("Now starting sample size of: ", str(sample.size)))
+  for (i in 1:20){
+    a_simulation <- generate_simulation(n= sample.size, setup = "A")
+    
+    for (method in different_subset_tested){
+      
+      if (method == "all.covariates"){
+         causal_forest_estimate <- causal_forest_wrapper(paste0("X.", 1:12), dataframe = a_simulation)
+         custom_aipw_splines <- aipw_splines(paste0("X.", 1:12), paste0("X.", 1:12), dataframe = a_simulation)
+         new.row <- data.frame("sample.size" = rep(sample.size, 3),
+                      "estimate" = c(causal_forest_estimate, custom_aipw_splines["aipw"], custom_aipw_splines["ipw"]),
+                      "estimator" = c("causal.forest", "aipw.splines", "ipw.splines"),
+                      "subset" = rep(method, 3))
+         results <- rbind(results, new.row)
+      } 
+      else if (method == "minimal.set"){
+         causal_forest_estimate <- causal_forest_wrapper(paste0("X.", 2:3), dataframe = a_simulation)
+         custom_aipw_splines <- aipw_splines(paste0("X.", 2:3), paste0("X.", 2:3), dataframe = a_simulation)
+         new.row <- data.frame("sample.size" = rep(sample.size, 3),
+                      "estimate" = c(causal_forest_estimate, custom_aipw_splines["aipw"], custom_aipw_splines["ipw"]),
+                      "estimator" = c("causal.forest", "aipw.splines", "ipw.splines"),
+                      "subset" = rep(method, 3))
+         results <- rbind(results, new.row)
+      } else if (method == "smart"){
+        X_subset <- a_simulation[,1:3]
+      } else {
+        print("Error.")
+      }
+    }
+  }
+}
+
+results$sample.size <- as.factor(results$sample.size)
+```
+
+
+```{r}
+# setupD$setup <- rep("D", nrow(setupD))
+# setupA$setup <- rep("A", nrow(setupA))
+# experiments_with_forest <- rbind(setupD, setupA)
+# write.csv(experiments_with_forest, "./experiments_with_forest.csv")
+```
+
+```{r}
+ggplot(results, aes(x = sample.size, y = estimate, fill = estimator)) +
+  geom_boxplot() +
+  geom_hline(yintercept = ATE["A"], color = "blue", alpha = 0.5) +
+  theme_minimal() +
+  facet_grid(subset~estimator)
+```
+
+
+
+# Check with Judith
+
+```{r}
+# a_simulation <- read.csv("../judith_docs/one_simu_python.csv")
+# names(a_simulation)[names(a_simulation) == "t"] <- "A"
+# names(a_simulation)[names(a_simulation) == "y"] <- "Y"
+
+a_simulation <- read.csv("./one_simulation.csv")
+a_simulation <- a_simulation[,2:20]
+
+results <- data.frame("estimate" = c(),
+                      "method" = c())
+
+for (i in 1:30){
+    aipw <- compute_aipw(a_simulation)
+    judith <- judith_aipw(a_simulation$Y, a_simulation$A, a_simulation[, 1:12], crossfit = 5)
+    results <- rbind(results, data.frame("estimate" = c(aipw, judith),
+                                          "method" = c("grf", "Judith's custom")))
+}
+
+results %>% group_by(method) %>% summarise(mean = mean(estimate))
+```
+
+
+```{r}
+aipw_forest_old <- function(X, W, Y, 
+                        crossfit = 2, 
+                        min.node.size.if.forest = 5) {
+  
+    n <- nrow(X)
+    n.folds <- crossfit
+    indices <- split(seq(n), sort(seq(n) %% n.folds))
+    
+    t0 = rep(0, n)
+    t1 = rep(1, n)
+
+    xt <- cbind(X, W)
+    xt0 <- cbind(X, t0)
+    xt1 <- cbind(X, t1)
+
+    mu.hat.1 <- rep(NA, n)
+    mu.hat.0 <- rep(NA, n)
+    e.hat <- rep(NA, n)
+    
+    # cross-fitting of nuisance parameters
+    for (idx in indices) {
+      # Estimation
+      outcome.model <- regression_forest(xt[-idx,], Y[-idx], num.trees = 100, min.node.size = min.node.size.if.forest)
+      propensity.model <- probability_forest( X[-idx,], as.factor(W[-idx]), num.trees = 100, min.node.size=10)
+        
+      # Prediction
+      mu.hat.1[idx] <- predict(outcome.model, data = xt1[idx,])$predictions
+      mu.hat.0[idx] <- predict(outcome.model, data = xt0[idx,])$predictions
+      e.hat[idx] <- predict(propensity.model, data = X[idx,])$predictions[,2]
+    }
+    
+    # compute estimates
+    aipw = mean(mu.hat.1 - mu.hat.0
+           + W / e.hat * (Y -  mu.hat.1)
+           - (1 - W) / (1 - e.hat) * (Y -  mu.hat.0))
+    
+    ipw = mean(Y * (W/e.hat - (1-W)/(1-e.hat)))
+    
+    #g_formula = mean(mu.hat.1) - mean(mu.hat.0)
+    
+    res = c("aipw" = aipw,
+            "ipw" = ipw)
+    
+    return(res)
+}
+
+an_estimate <- aipw_forest(X = a_simulation[, 1:6], 
+                           W = a_simulation$A,
+                           Y = a_simulation$Y)
+```
+
+
