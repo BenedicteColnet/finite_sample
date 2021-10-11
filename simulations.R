@@ -35,4 +35,8 @@ generate_simulation <- function(n = 1000, p = 12, setup = "D"){
 # toy simulation
 a_simulation <- generate_simulation()
 
+g <- ggplot(a_simulation, aes(x = X.1, y = Y)) +
+  geom_point()
+save("./data/test.pdf")
+
 write.csv(x=a_simulation, file="./data/tmp.csv")
