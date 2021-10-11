@@ -1,3 +1,5 @@
+library(ggplot2)
+
 # simulation set up according to Wager & Nie
 generate_simulation <- function(n = 1000, p = 12, setup = "D"){
   
@@ -33,4 +35,4 @@ generate_simulation <- function(n = 1000, p = 12, setup = "D"){
 # toy simulation
 a_simulation <- generate_simulation()
 
-write.csv(x=a_simulation, file="./tmp.csv")
+write.csv(x=a_simulation, file="./data/tmp.csv")
