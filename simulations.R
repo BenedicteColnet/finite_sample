@@ -169,7 +169,7 @@ different_subset_tested <- c("all.covariates.wrong",
                              "smart",
                              "minimal.set")
 
-for (sample.size in c(100, 300, 1000, 3000, 9000)){
+for (sample.size in c(100, 300, 1000, 3000)){
   for (i in 1:50){
     for (simulation_setup in c("A", "B", "C", "D")){
       
