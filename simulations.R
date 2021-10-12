@@ -164,8 +164,7 @@ results <- data.frame("sample.size" = c(),
                       "subset" = c(),
                       "simulation" = c())
 
-different_subset_tested <- c("all.covariates.wrong",
-                             "all.covariates.correct",
+different_subset_tested <- c("all.covariates.correct",
                              "smart",
                              "minimal.set")
 
@@ -181,11 +180,6 @@ for (sample.size in c(100, 300, 1000, 3000)){
       
       # compute estimator
       for (method in different_subset_tested){
-        # if (method == "all.covariates.wrong"){
-        #   X_treatment <- paste0("X.", 1:12)
-        #   X_outcome <- paste0("X.", 1:12)
-        #   X_naive <- paste0("X.", 1:12)
-        # } else 
           if (method == "all.covariates.correct"){
           X_treatment <- paste0("X.", 2:12)
           X_outcome <- paste0("X.", 2:12)
@@ -194,11 +188,11 @@ for (sample.size in c(100, 300, 1000, 3000)){
           X_treatment <- paste0("X.", 2:6)
           X_outcome <- paste0("X.", 3:6)
           X_naive <- paste0("X.", 2:3)
-        } else if (method == "minimal.set"){
+        } else { #minimal set
           X_treatment <- paste0("X.", 2:6)
           X_outcome <- paste0("X.", 2:6)
           X_naive <- paste0("X.", 2:6)
-        }
+        } 
         causal_forest_estimate <- causal_forest_wrapper(X_naive, dataframe = a_simulation)
         custom_aipw_forest <- aipw_forest(X_treatment, X_outcome, dataframe = a_simulation)
         tmle_estimate <- tmle_wrapper(X_naive, dataframe = a_simulation)
