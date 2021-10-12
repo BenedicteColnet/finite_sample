@@ -91,7 +91,8 @@ aipw_forest <- function(covariates_names_vector_treatment,
     outcome.model.treated <- regression_forest(X = dataframe[-idx & dataframe[,treatment_name] == 1, covariates_names_vector_treatment], dataframe[-idx & dataframe[,treatment_name] == 1, outcome_name], num.trees = 100, min.node.size = min.node.size.if.forest)
     outcome.model.control <- regression_forest(dataframe[-idx & dataframe[,treatment_name] == 0, covariates_names_vector_treatment], dataframe[-idx & dataframe[,treatment_name] == 0, outcome_name], num.trees = 100, min.node.size = min.node.size.if.forest)
     
-    propensity.model <- probability_forest(dataframe[-idx, covariates_names_vector_outcome], as.factor(dataframe[,treatment_name][-idx]), num.trees=100, min.node.size=min.node.size.if.forest)
+    #propensity.model <- probability_forest(dataframe[-idx, covariates_names_vector_outcome], as.factor(dataframe[,treatment_name][-idx]), num.trees=100, min.node.size=min.node.size.if.forest)
+    propensity.model <- cv.glmnet(x=dataframe[-idx, covariates_names_vector_outcome], y=W[-idx], family="binomial")
     
     # Prediction
     mu.hat.1[idx] <- predict(outcome.model.treated, data = xt1[idx,])$predictions
@@ -164,8 +165,8 @@ results <- data.frame("sample.size" = c(),
                       "subset" = c(),
                       "simulation" = c())
 
-different_subset_tested <- c("all.covariates.wrong",
-                             "all.covariates.correct",
+different_subset_tested <- c("all.covariates",
+                             "smart",
                              "minimal.set")
 
 for (sample.size in c(100, 300, 1000, 3000)){
@@ -180,37 +181,33 @@ for (sample.size in c(100, 300, 1000, 3000)){
       
       # compute estimator
       for (method in different_subset_tested){
-        if (method == "all.covariates.wrong"){
+        if (method == "all.covariates"){
           X_treatment <- paste0("X.", 1:12)
           X_outcome <- paste0("X.", 1:12)
           X_naive <- paste0("X.", 1:12)
         } else
-          if (method == "all.covariates.correct"){
-          X_treatment <- paste0("X.", 2:12)
-          X_outcome <- paste0("X.", 2:12)
-          X_naive <- paste0("X.", 2:12)
+          if (method == "smart"){
+          X_treatment <- paste0("X.", 1:3)
+          X_outcome <- paste0("X.", 2:6)
+          X_naive <- paste0("X.", 2:6)
         } else if (method == "minimal.set"){
           X_treatment <- paste0("X.", 2:3)
           X_outcome <- paste0("X.", 2:3)
           X_naive <- paste0("X.", 2:3)
         }
-        causal_forest_estimate <- causal_forest_wrapper(X_naive, dataframe = a_simulation)
+        #causal_forest_estimate <- causal_forest_wrapper(X_naive, dataframe = a_simulation)
         custom_aipw_forest <- aipw_forest(X_treatment, X_outcome, dataframe = a_simulation)
-        tmle_estimate <- tmle_wrapper(X_naive, dataframe = a_simulation)
+        #tmle_estimate <- tmle_wrapper(X_naive, dataframe = a_simulation)
         
-        new.row <- data.frame("sample.size" = rep(sample.size, 5),
-                              "estimate" = c(causal_forest_estimate, 
-                                             custom_aipw_forest["ipw"], 
+        new.row <- data.frame("sample.size" = rep(sample.size, 3),
+                              "estimate" = c(custom_aipw_forest["ipw"], 
                                              custom_aipw_forest["t-learner"], 
-                                             custom_aipw_forest["aipw"], 
-                                             tmle_estimate),
-                              "estimator" = c("causal.forest", 
-                                              "ipw", 
+                                             custom_aipw_forest["aipw"]),
+                              "estimator" = c("ipw", 
                                               "t-learner",
-                                              "aipw",
-                                              "tmle"),
-                              "subset" = rep(method, 5),
-                              "simulation" = rep(simulation_setup, 5))
+                                              "aipw"),
+                              "subset" = rep(method, 3),
+                              "simulation" = rep(simulation_setup, 3))
         results <- rbind(results, new.row)
       }
     }
@@ -222,4 +219,4 @@ results$sample.size <- as.factor(results$sample.size)
 
 # Save the results
 
-write.csv(x=results, file="./data/2021-10-12-forest-50rep.csv")
+write.csv(x=results, file="./data/2021-10-12-aipw-forest-outcome-glmnet-propensity.csv")
