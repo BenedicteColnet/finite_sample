@@ -63,8 +63,8 @@ aipw_forest <- function(covariates_names_vector_treatment,
                         dataframe,
                         outcome_name = "Y",
                         treatment_name = "A",
-                        n.folds = 10,
-                        min.node.size.if.forest = 1) {
+                        n.folds = 5,
+                        min.node.size.if.forest = 5) {
   
   n <- nrow(dataframe)
   indices <- split(seq(n), sort(seq(n) %% n.folds))
@@ -181,11 +181,12 @@ for (sample.size in c(100, 300, 1000, 3000)){
       
       # compute estimator
       for (method in different_subset_tested){
-        if (method == "all.covariates.wrong"){
-          X_treatment <- paste0("X.", 1:12)
-          X_outcome <- paste0("X.", 1:12)
-          X_naive <- paste0("X.", 1:12)
-        } else if (method == "all.covariates.correct"){
+        # if (method == "all.covariates.wrong"){
+        #   X_treatment <- paste0("X.", 1:12)
+        #   X_outcome <- paste0("X.", 1:12)
+        #   X_naive <- paste0("X.", 1:12)
+        # } else 
+          if (method == "all.covariates.correct"){
           X_treatment <- paste0("X.", 2:12)
           X_outcome <- paste0("X.", 2:12)
           X_naive <- paste0("X.", 2:12)
