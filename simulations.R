@@ -91,7 +91,7 @@ aipw_forest <- function(covariates_names_vector_treatment,
     outcome.model.treated <- regression_forest(X = dataframe[-idx & dataframe[,treatment_name] == 1, covariates_names_vector_treatment], dataframe[-idx & dataframe[,treatment_name] == 1, outcome_name], num.trees = 100, min.node.size = min.node.size.if.forest)
     outcome.model.control <- regression_forest(dataframe[-idx & dataframe[,treatment_name] == 0, covariates_names_vector_treatment], dataframe[-idx & dataframe[,treatment_name] == 0, outcome_name], num.trees = 100, min.node.size = min.node.size.if.forest)
     
-    propensity.model <- probability_forest(dataframe[-idx, covariates_names_vector_outcome], as.factor(W[-idx]), num.trees=100, min.node.size=min.node.size.if.forest)
+    propensity.model <- probability_forest(dataframe[-idx, covariates_names_vector_outcome], as.factor(dataframe[,treatment_name][-idx]), num.trees=100, min.node.size=min.node.size.if.forest)
     
     # Prediction
     mu.hat.1[idx] <- predict(outcome.model.treated, data = xt1[idx,])$predictions
