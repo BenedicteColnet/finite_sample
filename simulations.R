@@ -170,7 +170,9 @@ different_subset_tested <- c("all.covariates.wrong",
                              "minimal.set")
 
 for (sample.size in c(100, 300, 1000, 3000)){
+  print(paste0("sample size: ", sample.size))
   for (i in 1:50){
+    print(paste0("repetitions: ", i))
     for (simulation_setup in c("A", "B", "C", "D")){
       
       # generate a simulation
