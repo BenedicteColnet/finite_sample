@@ -1,0 +1,230 @@
+---
+title: "Covariates selection"
+author:
+  - Bénédicte Colnet [Inria, Paris-Saclay]
+date: "October 2021"
+output:
+  html_document:
+    code_folding: "hide"
+    number_sections: no
+    toc: yes
+    toc_depth: 2
+  pdf_document:
+    toc: yes
+   
+---
+
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+# Reproducibility
+set.seed(123)
+
+# Libraries
+library(dplyr) # case_when and others
+library(ggplot2)
+library(tidyr) # pivot
+library(grf)
+library(glmnet)
+library(ranger) # efficient forest
+library(splines) # function bs() for splines
+library(mvtnorm) # rmvnorm
+library(tmle)
+library(SuperLearner)
+
+source("estimators.R")
+source("generate_data_models.R")
+```
+
+
+```{r}
+ggplot(results.linear[(results.linear$estimator == "aipw" | results.linear$estimator == "tmle"),], aes(x = sample.size, y = estimate, fill = subset)) +
+  geom_boxplot(alpha = 0.8) +
+  facet_grid(~estimator, scales = "free") +
+  geom_hline(yintercept = 3, color = "darkblue") +
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust = 0.5),
+        legend.position = "bottom") +
+  xlab("Sample size") +
+  ylab("") 
+```
+
+```{r}
+sl_lib = c("SL.lm", "SL.mean", "SL.ranger")
+# by default it uses 10 cross fold validation
+result = SuperLearner(Y = a_simulation[,"Y"], X = a_simulation[,4:10], SL.library = sl_lib, family = gaussian())
+```
+
+```{r}
+# for maximum accuracy one may try glmnet, randomForest, XGBoost, SVM, and bartMachine
+# predict(result, a_simulation[,4:10], onlySL = TRUE)$pred
+
+# Predict back on the holdout dataset.
+# onlySL is set to TRUE so we don't fit algorithms that had weight = 0, saving computation.
+# pred = predict(sl, x_holdout, onlySL = TRUE)
+
+# Here is the risk of the best model (discrete SuperLearner winner).
+result
+```
+
+```{r}
+# Doing cross validation 
+# This will take about 2x as long as the previous SuperLearner.
+cv_sl = CV.SuperLearner(Y = y_train, X = x_train, family = binomial(),
+                          # For a real analysis we would use V = 10.
+                          cvControl = list(V = 2), innerCvControl = list(list(V=2)),
+                          SL.library = c("SL.mean", "SL.glmnet", "SL.ranger"))
+```
+
+
+```{r}
+results.linear.indep.cov <- data.frame("sample.size" = c(),
+                      "estimate" = c(),
+                      "estimator" = c(),
+                      "subset" = c(),
+                      "simulation" = c())
+
+
+for (sample.size in c(100, 300, 1000, 3000, 9000)){
+  for (i in 1:30){
+    # generate a simulation
+    
+    a_simulation <- generate_simulation_linear_constant_cate(n_obs = sample.size, independent_covariate = TRUE)
+      
+    # choose subset
+    for (method in different_subset_tested){
+        if (method == "all.covariates"){
+          X_treatment <- paste0("X.", 1:12)
+          X_outcome <- paste0("X.", 1:12)
+        } else if (method == "all.covariates.wo.instruments"){
+          X_treatment <- paste0("X.", 4:12)
+          X_outcome <- paste0("X.", 4:12)
+        } else if (method == "smart"){
+          X_treatment <- paste0("X.", 4:7)
+          X_outcome <- paste0("X.", 4:10)
+        } else if (method == "minimal.set"){
+          X_treatment <- paste0("X.", 4:7)
+          X_outcome <- paste0("X.", 4:7)
+        } else {
+          stop("error in subset.")
+        }
+        custom_aipw <- aipw_linear(X_treatment, X_outcome, dataframe = a_simulation)
+
+        new.row <- data.frame("sample.size" = rep(sample.size, 3),
+                      "estimate" = c(custom_aipw["ipw"],
+                                     custom_aipw["t.learner"],
+                                     custom_aipw["aipw"]),
+                      "estimator" = c("ipw",
+                                      "t-learner",
+                                      "aipw"),
+                      "subset" = rep(method, 3),
+                      "simulation" = rep("linear", 3))
+
+        results.linear.indep.cov <- rbind(results.linear.indep.cov, new.row)
+    }
+  }
+}
+  
+results.linear.indep.cov$sample.size <- as.factor(results.linear.indep.cov$sample.size)
+```
+
+
+```{r}
+ggplot(results.linear.indep.cov[results.linear.indep.cov$sample.size != 100 & results.linear.indep.cov$sample.size != 300,], aes(x = sample.size, y = estimate, fill = subset)) +
+  geom_boxplot(alpha = 0.8) +
+  facet_grid(~estimator, scales = "free") +
+  geom_hline(yintercept = 3, color = "darkblue") +
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust = 0.5),
+        legend.position = "bottom") +
+  xlab("Sample size") +
+  ylab("") 
+```
+```{r}
+results.linear.indep.cov$covariates <- rep("independent", nrow(results.linear.indep.cov))
+results.linear$covariates <- rep("non-independent", nrow(results.linear))
+total.linear <- rbind(results.linear.indep.cov, results.linear)
+```
+
+
+```{r}
+ggplot(total.linear[total.linear$sample.size != 100 & total.linear$sample.size != 300,], aes(x = sample.size, y = estimate, fill = subset)) +
+  geom_boxplot(alpha = 0.8) +
+  facet_grid(covariates~estimator, scales = "free") +
+  geom_hline(yintercept = 3, color = "darkblue") +
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust = 0.5),
+        legend.position = "bottom") +
+  xlab("Sample size") +
+  ylab("")
+```
+
+
+
+```{r}
+results.linear.no.crossfitting <- data.frame("sample.size" = c(),
+                      "estimate" = c(),
+                      "estimator" = c(),
+                      "subset" = c(),
+                      "simulation" = c())
+
+
+for (sample.size in c(1000, 3000, 9000)){
+  for (i in 1:30){
+    # generate a simulation
+    
+    a_simulation <- generate_simulation_linear_constant_cate(n_obs = sample.size, independent_covariate = FALSE)
+      
+    # choose subset
+    for (method in different_subset_tested){
+        if (method == "all.covariates"){
+          X_treatment <- paste0("X.", 1:12)
+          X_outcome <- paste0("X.", 1:12)
+        } else if (method == "all.covariates.wo.instruments"){
+          X_treatment <- paste0("X.", 4:12)
+          X_outcome <- paste0("X.", 4:12)
+        } else if (method == "smart"){
+          X_treatment <- paste0("X.", 4:7)
+          X_outcome <- paste0("X.", 4:10)
+        } else if (method == "minimal.set"){
+          X_treatment <- paste0("X.", 4:7)
+          X_outcome <- paste0("X.", 4:7)
+        } else {
+          stop("error in subset.")
+        }
+        custom_aipw <- aipw_linear(X_treatment, X_outcome, dataframe = a_simulation, n.folds = 0)
+
+        new.row <- data.frame("sample.size" = rep(sample.size, 3),
+                      "estimate" = c(custom_aipw["ipw"],
+                                     custom_aipw["t.learner"],
+                                     custom_aipw["aipw"]),
+                      "estimator" = c("ipw",
+                                      "t-learner",
+                                      "aipw"),
+                      "subset" = rep(method, 3),
+                      "simulation" = rep("linear", 3))
+
+        results.linear.no.crossfitting <- rbind(results.linear.no.crossfitting, new.row)
+    }
+  }
+}
+  
+results.linear.no.crossfitting$sample.size <- as.factor(results.linear.no.crossfitting$sample.size)
+```
+
+```{r}
+ggplot(results.linear.no.crossfitting, aes(x = sample.size, y = estimate, fill = subset)) +
+  geom_boxplot(alpha = 0.8) +
+  facet_grid(~estimator, scales = "free") +
+  geom_hline(yintercept = 3, color = "darkblue") +
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust = 0.5),
+        legend.position = "bottom") +
+  xlab("Sample size") +
+  ylab("") 
+```
+
+
+Friedman ne marche pas bien !!
+Prendre plutôt chernozukhov et puis les simu de Wager.
+
