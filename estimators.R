@@ -201,14 +201,17 @@ tmle_wrapper <- function(covariates_names_vector,
                          dataframe,
                          outcome_name = "Y",
                          treatment_name = "A",
-                         nuisance = "glmnet"){
+                         nuisance = "glmnet",
+                         n.folds = 2,
+                         automate = FALSE){
   
   if (nuisance == "glmnet"){
     SL.library<- c("SL.glm", "SL.glmnet", "SL.glm.interaction")
   } else if (nuisance == "forest"){
     SL.library <- c("SL.glm", "SL.ranger")
   } else if (nuisance == "linear"){
-    SL.library <- c("SL.glm", "SL.lm")
+    SL.library.outcome <- c("SL.lm")
+    SL.library.treatment <- c("SL.glm")
   } else {
     stop("error in nuisance - TMLE")
   }
@@ -220,8 +223,9 @@ tmle_wrapper <- function(covariates_names_vector,
                A = dataframe[,treatment_name],
                W = dataframe[,covariates_names_vector],
                family = "gaussian",
-               Q.SL.library = SL.library,
-               g.SL.library = SL.library)
+               Q.SL.library = SL.library.outcome,
+               g.SL.library = SL.library.treatment,
+               V = n.folds)
   
   return(TMLE$estimates$ATE$psi)
 }

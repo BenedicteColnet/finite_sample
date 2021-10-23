@@ -20,7 +20,8 @@ results.linear <- data.frame("sample.size" = c(),
                              "estimate" = c(),
                              "estimator" = c(),
                              "subset" = c(),
-                             "simulation" = c())
+                             "simulation" = c(),
+                             "cross-fitting" = c())
 
 different_subset_tested <- c("all.covariates",
                              "all.covariates.wo.instruments",
@@ -31,7 +32,6 @@ for (sample.size in c(100, 300, 1000, 3000, 9000, 30000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:50){
     # generate a simulation
-    
     a_simulation <- generate_simulation_linear_constant_cate(n_obs = sample.size, independent_covariate = FALSE)
     
     # choose subset
@@ -51,29 +51,26 @@ for (sample.size in c(100, 300, 1000, 3000, 9000, 30000)){
       } else {
         stop("error in subset.")
       }
-      custom_aipw <- aipw_linear(X_treatment, X_outcome, dataframe = a_simulation)
-      custom_aipw_many_folds <- aipw_linear(X_treatment, X_outcome, dataframe = a_simulation, n.folds = 10)
-      tmle.estimate <- tmle_wrapper(covariates_names_vector = X_outcome, dataframe = a_simulation, nuisance = "linear")
       
-      new.row <- data.frame("sample.size" = rep(sample.size, 7),
-                            "estimate" = c(custom_aipw["ipw"],
-                                           custom_aipw["t.learner"],
-                                           custom_aipw["aipw"],
-                                           custom_aipw_many_folds["ipw"],
-                                           custom_aipw_many_folds["t.learner"],
-                                           custom_aipw_many_folds["aipw"],
-                                           tmle.estimate),
-                            "estimator" = c("ipw",
-                                            "t-learner",
-                                            "aipw",
-                                            "ipw - many folds",
-                                            "t-learner - many folds",
-                                            "aipw - many folds",
-                                            "tmle"),
-                            "subset" = rep(method, 7),
-                            "simulation" = rep("linear", 7))
-      
-      results.linear <- rbind(results.linear, new.row)
+      for (number_of_folds in c(0, 2, 10)){
+        custom_aipw <- aipw_linear(X_treatment, X_outcome, dataframe = a_simulation, n.folds = number_of_folds)
+        tmle.estimate <- tmle_wrapper(covariates_names_vector = X_outcome, dataframe = a_simulation, nuisance = "linear", n.folds = number_of_folds)
+        new.row <- data.frame("sample.size" = rep(sample.size, 4),
+                              "estimate" = c(custom_aipw["ipw"],
+                                             custom_aipw["t.learner"],
+                                             custom_aipw["aipw"],
+                                             tmle.estimate),
+                              "estimator" = c("ipw",
+                                              "t-learner",
+                                              "aipw",
+                                              "tmle"),
+                              "subset" = rep(method, 4),
+                              "simulation" = rep("linear", 4),
+                              "cross-fitting" = rep(number_of_folds, 4))
+        
+        results.linear <- rbind(results.linear, new.row)
+        
+      }
     }
   }
 }
