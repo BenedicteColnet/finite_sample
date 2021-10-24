@@ -321,14 +321,9 @@ aipw_ML <- function(covariates_names_vector_treatment,
   
   n_obs <- nrow(dataframe)
   
-  # Fit elastic net with 5 different alphas: 0, 0.2, 0.4, 0.6, 0.8, 1.0.
-  # 0 corresponds to ridge and 1 to lasso.
-  enet = create.Learner("SL.glmnet", detailed_names = T,
-                        tune = list(alpha = seq(0, 1, length.out = 5)))
-  
   # Choose libraries for our super learner
-  sl_libs_outcome <- c('SL.ranger', 'SL.earth', 'SL.glm', 'SL.mean', enet$names)
-  sl_libs_treatment <- c('SL.ranger', 'SL.earth', 'SL.glm', 'SL.mean', enet$names)
+  sl_libs_outcome <- c('SL.ranger', 'SL.glm', 'SL.mean', "SL.glmnet")
+  sl_libs_treatment <- c('SL.ranger',  'SL.glm', 'SL.mean', "SL.glmnet")
   
   # Cross-fitted estimates of E[Y|X,W=1], E[Y|X,W=0] and e(X) = P[W=1|X]
   mu.hat.1 <- rep(NA, n_obs)
