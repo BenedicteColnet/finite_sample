@@ -53,6 +53,7 @@ for (sample.size in c(1000, 3000, 9000, 30000)){
       }
       
       for (number_of_folds in c(2, 10)){
+        print("Start AIPW")
         custom_aipw <- aipw_ML(X_treatment, X_outcome, dataframe = a_simulation, n.folds = number_of_folds)
         #tmle.estimate <- tmle_wrapper(covariates_names_vector = X_outcome, dataframe = a_simulation, nuisance = "linear", n.folds = number_of_folds)
         new.row <- data.frame("sample.size" = rep(sample.size, 3),

@@ -322,8 +322,8 @@ aipw_ML <- function(covariates_names_vector_treatment,
   n_obs <- nrow(dataframe)
   
   # Choose libraries for our super learner
-  sl_libs_outcome <- c('SL.ranger', 'SL.glm', 'SL.mean', "SL.glmnet")
-  sl_libs_treatment <- c('SL.ranger',  'SL.glm', 'SL.mean', "SL.glmnet")
+  sl_libs_outcome <- c('SL.ranger', 'SL.glm', 'SL.mean', "SL.bartMachine")
+  sl_libs_treatment <- c('SL.ranger',  'SL.glm', 'SL.mean', "SL.bartMachine")
   
   # Cross-fitted estimates of E[Y|X,W=1], E[Y|X,W=0] and e(X) = P[W=1|X]
   mu.hat.1 <- rep(NA, n_obs)
@@ -348,16 +348,17 @@ aipw_ML <- function(covariates_names_vector_treatment,
       Y_control <- dataframe[-idx & dataframe[,treatment_name] == 0, outcome_name]
       
       # Fit super learner on the set -idx
+      print("START mu.1 - super learning")
       mu.1.model <- SuperLearner(Y = Y_treated, 
                                  X = X_treated, 
                                  family = gaussian(), 
                                  SL.library = sl_libs_outcome) 
-      
+      print("START mu.0 - super learning")
       mu.0.model <- SuperLearner(Y = Y_control, 
                                  X = X_control, 
                                  family = gaussian(), 
                                  SL.library = sl_libs_outcome) 
-      
+      print("START e(x) - super learning")
       propensity.model <- SuperLearner(Y = Y[-idx], 
                                        X = X[-idx,], 
                                        family = binomial(), 
