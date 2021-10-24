@@ -327,8 +327,8 @@ aipw_ML <- function(covariates_names_vector_treatment,
                         tune = list(alpha = seq(0, 1, length.out = 5)))
   
   # Choose libraries for our super learner
-  sl_libs_outcome <- c('SL.glmnet', 'SL.ranger', 'SL.earth', 'SL.glm', 'SL.mean', "SL.bartMachine", "SL.xgboost", enet$names)
-  sl_libs_treatment <- c('SL.glmnet', 'SL.ranger', 'SL.earth', 'SL.glm', 'SL.mean', "SL.bartMachine", "SL.xgboost", enet$names)
+  sl_libs_outcome <- c('SL.ranger', 'SL.earth', 'SL.glm', 'SL.mean', enet$names)
+  sl_libs_treatment <- c('SL.ranger', 'SL.earth', 'SL.glm', 'SL.mean', enet$names)
   
   # Cross-fitted estimates of E[Y|X,W=1], E[Y|X,W=0] and e(X) = P[W=1|X]
   mu.hat.1 <- rep(NA, n_obs)
