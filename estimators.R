@@ -308,5 +308,131 @@ aipw_splines <- function(covariates_names_vector_treatment,
   res = c("ipw" = ipw, "t.learner" = t.learner, "aipw" = aipw)
   
   return(res)
-  
 }
+
+
+# Custom AIPW with super learning for nuisance parameters
+aipw_ML <- function(covariates_names_vector_treatment,
+                    covariates_names_vector_outcome,
+                    dataframe,
+                    outcome_name = "Y",
+                    treatment_name = "A",
+                    n.folds = 2){
+  
+  n_obs <- nrow(dataframe)
+  
+  # Fit elastic net with 5 different alphas: 0, 0.2, 0.4, 0.6, 0.8, 1.0.
+  # 0 corresponds to ridge and 1 to lasso.
+  enet = create.Learner("SL.glmnet", detailed_names = T,
+                        tune = list(alpha = seq(0, 1, length.out = 5)))
+  
+  # Choose libraries for our super learner
+  sl_libs_outcome <- c('SL.glmnet', 'SL.ranger', 'SL.earth', 'SL.glm', 'SL.mean', "SL.bartMachine", "SL.xgboost", enet$names)
+  sl_libs_treatment <- c('SL.glmnet', 'SL.ranger', 'SL.earth', 'SL.glm', 'SL.mean', "SL.bartMachine", "SL.xgboost", enet$names)
+  
+  # Cross-fitted estimates of E[Y|X,W=1], E[Y|X,W=0] and e(X) = P[W=1|X]
+  mu.hat.1 <- rep(NA, n_obs)
+  mu.hat.0 <- rep(NA, n_obs)
+  e.hat <- rep(NA, n_obs)
+  
+  # Useful quantities for afterward
+  Y <- dataframe[,outcome_name]
+  W <- dataframe[,treatment_name]
+  X <- dataframe[,covariates_names_vector_treatment]
+  
+  
+  if (n.folds > 1){
+    
+    indices <- split(seq(n_obs), sort(seq(n_obs) %% n.folds))
+    
+    for (idx in indices) {
+      
+      X_treated <- dataframe[-idx & dataframe[,treatment_name] == 1, covariates_names_vector_outcome]
+      Y_treated <- dataframe[-idx & dataframe[,treatment_name] == 1, outcome_name]
+      X_control <- dataframe[-idx & dataframe[,treatment_name] == 0, covariates_names_vector_outcome]
+      Y_control <- dataframe[-idx & dataframe[,treatment_name] == 0, outcome_name]
+      
+      # Fit super learner on the set -idx
+      mu.1.model <- SuperLearner(Y = Y_treated, 
+                                 X = X_treated, 
+                                 family = gaussian(), 
+                                 SL.library = sl_libs_outcome) 
+      
+      mu.0.model <- SuperLearner(Y = Y_control, 
+                                 X = X_control, 
+                                 family = gaussian(), 
+                                 SL.library = sl_libs_outcome) 
+      
+      propensity.model <- SuperLearner(Y = Y[-idx], 
+                                       X = X[-idx,], 
+                                       family = binomial(), 
+                                       SL.library = sl_libs_treatment) 
+      
+      # Predict with cross-fitting
+      mu.hat.1[idx] <- predict(mu.1.model, 
+                               newdata = dataframe[idx,  covariates_names_vector_outcome])$pred
+      mu.hat.0[idx] <- predict(mu.0.model, 
+                               newdata = dataframe[idx,  covariates_names_vector_outcome])$pred
+      e.hat[idx] <- predict(propensity.model, 
+                            newdata = dataframe[idx, covariates_names_vector_treatment])$pred
+      
+    }
+  } else if (n.folds == 0 | n.folds == 1){
+    
+    X_treated <- dataframe[dataframe[,treatment_name] == 1, covariates_names_vector_outcome]
+    Y_treated <- dataframe[dataframe[,treatment_name] == 1, outcome_name]
+    X_control <- dataframe[dataframe[,treatment_name] == 0, covariates_names_vector_outcome]
+    Y_control <- dataframe[dataframe[,treatment_name] == 0, outcome_name]
+    
+    
+    # Fit super learner
+    mu.1.model <- SuperLearner(Y = Y_treated, 
+                               X = X_treated, 
+                               family = gaussian(), 
+                               SL.library = sl_libs_outcome) 
+    
+    mu.0.model <- SuperLearner(Y = Y_control, 
+                               X = X_control, 
+                               family = gaussian(), 
+                               SL.library = sl_libs_outcome) 
+    
+    propensity.model <- SuperLearner(Y = Y, 
+                                     X = X, 
+                                     family = binomial(), 
+                                     SL.library = sl_libs_treatment) 
+    
+    # Predict 
+    mu.hat.1 <- predict(mu.1.model, newdata = dataframe[,covariates_names_vector_outcome])$pred
+    mu.hat.0 <- predict(mu.0.model, newdata = dataframe[, covariates_names_vector_outcome])$pred
+    e.hat <- predict(propensity.model, newdata = dataframe[, covariates_names_vector_treatment])$pred
+    
+    
+  } else {
+    stop("n.fold must be a positive integer")
+  }
+  
+  # replace extreme values if necessary
+  e.hat <- replace(e.hat, e.hat < 0.01, 0.01)
+  e.hat <- replace(e.hat, e.hat > 0.99, 0.99)  
+  
+  ## T-learner
+  t.learner <- mean(mu.hat.1) - mean(mu.hat.0)
+  
+  ## AIPW
+  aipw <- (mu.hat.1 - mu.hat.0
+           + W / e.hat * (Y -  mu.hat.1)
+           - (1 - W) / (1 - e.hat) * (Y -  mu.hat.0))
+  
+  aipw <- mean(aipw)
+  
+  ## IPW
+  ipw = mean(Y * (W/e.hat - (1-W)/(1-e.hat)))
+  
+  
+  res = c("ipw" = ipw, "t.learner" = t.learner, "aipw" = aipw)
+  
+  return(res)
+}
+
+
+
