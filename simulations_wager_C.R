@@ -31,6 +31,7 @@ different_subset_tested <- c("all.covariates",
 for (sample.size in c(1000, 3000, 9000, 30000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:50){
+    print(paste0("Repetition:", i))
     # generate a simulation
     a_simulation <- generate_simulation_wager_nie(n = sample.size, setup = "C")
     
@@ -53,6 +54,7 @@ for (sample.size in c(1000, 3000, 9000, 30000)){
       }
       
       for (number_of_folds in c(2, 10)){
+        print(paste0("FOLD: ", number_of_folds))
         print("Start AIPW")
         custom_aipw <- aipw_ML(X_treatment, X_outcome, dataframe = a_simulation, n.folds = number_of_folds)
         #tmle.estimate <- tmle_wrapper(covariates_names_vector = X_outcome, dataframe = a_simulation, nuisance = "linear", n.folds = number_of_folds)
@@ -66,7 +68,7 @@ for (sample.size in c(1000, 3000, 9000, 30000)){
                               "subset" = rep(method, 3),
                               "simulation" = rep("wager-C", 3),
                               "cross-fitting" = rep(number_of_folds, 3))
-        
+        print("End of AIPW")
         results.linear <- rbind(results.linear, new.row)
         
       }
