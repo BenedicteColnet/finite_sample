@@ -77,4 +77,4 @@ for (sample.size in c(100, 300, 1000, 3000, 9000, 30000)){
 
 results.linear$sample.size <- as.factor(results.linear$sample.size)
 
-write.csv(x=results.linear, file="./data/2021-10-23-linear-nonindep.csv")
+write.csv(x=results.linear, file="./data/2021-10-25-linear-nonindep-hte.csv")
