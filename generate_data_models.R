@@ -114,3 +114,29 @@ generate_simulation_linear_constant_cate <- function(n_obs = 1000, p = 12, ATE =
   
   return(simulation)
 }
+
+
+# this should also be an ATE of 3 but with modularities alon X.7 to X.9
+generate_simulation_linear_non_constant_cate <- function(n_obs = 1000, p = 12, independent_covariate = TRUE){
+  
+  # generate multivariate gaussian vector
+  
+  if(independent_covariate){
+    X = rmvnorm(n = n_obs, mean = rep(1, p), sigma = diag(p))
+  } else {
+    cov_mat = toeplitz(0.7^(0:(p - 1)))
+    X = rmvnorm(n = n_obs, mean = rep(0, p), sigma = cov_mat)
+  }
+  
+  b = X[,4] + X[,5] + X[,6]+ X[,7]+ X[,8] +  X[,9] +  X[,10]
+  e = 1/(1 + exp(-X[,1]) + exp(-X[,2]) + exp(-X[,3])+ exp(-X[,4])+ exp(-X[,5])+ exp(-X[,6]) + exp(-X[,7]))
+  
+  # complete potential outcomes, treatment, and observed outcome
+  simulation <- data.frame(X = X, b = b, e = e)
+  simulation$Y_0 <- simulation$b + rnorm(n_obs)
+  simulation$Y_1 <- simulation$b + simulation$X.7 + simulation$X.8 + simulation$X.9 + rnorm(n_obs)
+  simulation$A <- rbinom(n_obs, size = 1, prob = simulation$e)
+  simulation$Y <- ifelse(simulation$A == 1, simulation$Y_1, simulation$Y_0)
+  
+  return(simulation)
+}
