@@ -77,4 +77,4 @@ for (sample.size in c(1000, 3000, 9000)){
 }
 
 
-write.csv(x=results.linear, file="./data/2021-10-23-wager-C-ML.csv")
+write.csv(x=results.linear, file="./data/2021-10-23-wager-C-ML-faster.csv")
