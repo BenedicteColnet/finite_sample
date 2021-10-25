@@ -347,17 +347,17 @@ aipw_ML <- function(covariates_names_vector_treatment,
       Y_control <- dataframe[-idx & dataframe[,treatment_name] == 0, outcome_name]
       
       # Fit super learner on the set -idx
-      print("START mu.1 - super learning")
+      #print("START mu.1 - super learning")
       mu.1.model <- SuperLearner(Y = Y_treated, 
                                  X = X_treated, 
                                  family = gaussian(), 
                                  SL.library = sl_libs_outcome) 
-      print("START mu.0 - super learning")
+      #print("START mu.0 - super learning")
       mu.0.model <- SuperLearner(Y = Y_control, 
                                  X = X_control, 
                                  family = gaussian(), 
                                  SL.library = sl_libs_outcome) 
-      print("START e(x) - super learning")
+      #print("START e(x) - super learning")
       propensity.model <- SuperLearner(Y = W[-idx], 
                                        X = X[-idx,], 
                                        family = binomial(), 
