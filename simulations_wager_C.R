@@ -28,9 +28,9 @@ different_subset_tested <- c("all.covariates",
                              "smart",
                              "minimal.set")
 
-for (sample.size in c(1000, 3000, 9000, 30000)){
+for (sample.size in c(1000, 3000, 9000)){
   print(paste0("Starting sample size ", sample.size))
-  for (i in 1:50){
+  for (i in 1:20){
     print(paste0("Repetition:", i))
     # generate a simulation
     a_simulation <- generate_simulation_wager_nie(n = sample.size, setup = "C")
@@ -53,7 +53,7 @@ for (sample.size in c(1000, 3000, 9000, 30000)){
         stop("error in subset.")
       }
       
-      for (number_of_folds in c(2, 10)){
+      for (number_of_folds in c(2)){
         print(paste0("FOLD: ", number_of_folds))
         print("Start AIPW")
         custom_aipw <- aipw_ML(X_treatment, X_outcome, dataframe = a_simulation, n.folds = number_of_folds)
