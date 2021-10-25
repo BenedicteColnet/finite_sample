@@ -125,7 +125,7 @@ generate_simulation_linear_non_constant_cate <- function(n_obs = 1000, p = 12, i
     X = rmvnorm(n = n_obs, mean = rep(1, p), sigma = diag(p))
   } else {
     cov_mat = toeplitz(0.7^(0:(p - 1)))
-    X = rmvnorm(n = n_obs, mean = rep(0, p), sigma = cov_mat)
+    X = rmvnorm(n = n_obs, mean = rep(1, p), sigma = cov_mat)
   }
   
   b = X[,4] + X[,5] + X[,6]+ X[,7]+ X[,8] +  X[,9] +  X[,10]
