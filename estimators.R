@@ -322,8 +322,8 @@ aipw_ML <- function(covariates_names_vector_treatment,
   n_obs <- nrow(dataframe)
   
   # Choose libraries for our super learner
-  sl_libs_outcome <- c('SL.ranger', 'SL.glm', 'SL.mean', "SL.bartMachine")
-  sl_libs_treatment <- c('SL.ranger',  'SL.glm', 'SL.mean', "SL.bartMachine")
+  sl_libs_outcome <- c('SL.ranger', 'SL.glm', 'SL.mean', "SL.lm")
+  sl_libs_treatment <- c('SL.ranger',  'SL.glm', 'SL.mean')
   
   # Cross-fitted estimates of E[Y|X,W=1], E[Y|X,W=0] and e(X) = P[W=1|X]
   mu.hat.1 <- rep(NA, n_obs)
