@@ -5,10 +5,7 @@ set.seed(123)
 library(dplyr) # case_when and others
 library(ggplot2)
 library(tidyr) # pivot
-library(grf)
 library(glmnet)
-library(ranger) # efficient forest
-library(splines) # function bs() for splines
 library(mvtnorm) # rmvnorm
 library(tmle)
 library(SuperLearner)
@@ -28,11 +25,11 @@ different_subset_tested <- c("all.covariates",
                              "smart",
                              "minimal.set")
 
-for (sample.size in c(100, 300, 1000, 3000, 9000, 30000)){
+for (sample.size in c(300, 1000, 3000, 9000, 30000)){
   print(paste0("Starting sample size ", sample.size))
-  for (i in 1:50){
+  for (i in 1:3){
     # generate a simulation
-    a_simulation <- generate_simulation_linear_non_constant_cate(n_obs = sample.size, independent_covariate = FALSE)
+    a_simulation <- generate_simulation_linear(n_obs = sample.size, independent_covariate = FALSE, constant_cate = FALSE)
     
     # choose subset
     for (method in different_subset_tested){
@@ -77,4 +74,4 @@ for (sample.size in c(100, 300, 1000, 3000, 9000, 30000)){
 
 results.linear$sample.size <- as.factor(results.linear$sample.size)
 
-write.csv(x=results.linear, file="./data/2021-10-25-linear-nonindep-hte.csv")
+write.csv(x=results.linear, file="./data/2021-10-26-linear-nonindep-nonconstant-ate.csv")
