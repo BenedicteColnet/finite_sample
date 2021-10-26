@@ -44,21 +44,21 @@ generate_simulation_wager_nie <- function(n = 1000, p = 12, setup = "D"){
   return(simulation)
 }
 
-
 # if ATE = 3 the naive ATE is overestimated
-generate_simulation_linear <- function(n_obs = 1000, p = 12, independent_covariate = TRUE, constant_cate = TRUE){
+generate_simulation_linear <- function(n_obs = 1000, p = 12, independent_covariate = TRUE, constant_cate = TRUE, all_covariates_output = FALSE){
   
   # generate multivariate gaussian vector
-  
   if(independent_covariate){
-    X = rmvnorm(n = n_obs, mean = rep(0, p), sigma = diag(p))
+    cov_mat = diag(p)
   } else {
     cov_mat = toeplitz(0.7^(0:(p - 1)))
-    X = rmvnorm(n = n_obs, mean = rep(0, p), sigma = cov_mat)
   }
   
+  X = rmvnorm(n = n_obs, mean = rep(1, p), sigma = cov_mat)
+  
+  # generate baseline and propensity scores
   b = X[,4] + X[,5] + X[,6]+ X[,7]+ X[,8] +  X[,9] +  X[,10]
-  e = 1/(1 + exp(-X[,1]) + exp(-X[,2]) + exp(-X[,3])+ exp(-X[,4])+ exp(-X[,5])+ exp(-X[,6]) + exp(-X[,7]))
+  e = 1/(1 + exp(-X[,1] - X[,2] -X[,3] -X[,4] -X[,5] -X[,6] -X[,7]))
   
   # complete potential outcomes, treatment, and observed outcome
   simulation <- data.frame(X = X, b = b, e = e)
@@ -74,5 +74,11 @@ generate_simulation_linear <- function(n_obs = 1000, p = 12, independent_covaria
   simulation$A <- rbinom(n_obs, size = 1, prob = simulation$e)
   simulation$Y <- ifelse(simulation$A == 1, simulation$Y_1, simulation$Y_0)
   
-  return(simulation)
+  if(all_covariates_output){
+    return(simulation)
+  } else {
+    simulation <- simulation[, c(paste0("X.", 1:p), "A", "Y")]
+    return(simulation)
+  }
+  
 }
