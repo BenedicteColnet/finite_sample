@@ -25,9 +25,9 @@ different_subset_tested <- c("all.covariates",
                              "smart",
                              "minimal.set")
 
-for (sample.size in c(300, 1000, 3000, 9000, 30000)){
+for (sample.size in c(300, 1000, 3000, 9000, 30000, 100000)){
   print(paste0("Starting sample size ", sample.size))
-  for (i in 1:3){
+  for (i in 1:50){
     # generate a simulation
     a_simulation <- generate_simulation_linear(n_obs = sample.size, independent_covariate = FALSE)
     
