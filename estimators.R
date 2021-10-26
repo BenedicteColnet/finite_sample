@@ -202,16 +202,16 @@ tmle_wrapper <- function(covariates_names_vector,
                          treatment_name = "A",
                          n.folds = 2,
                          automate = FALSE,
-                         SL.library.outcome = c("SL.mean", "SL.lm"),
-                         SL.library.treatment = c("SL.glm", "SL.mean")){
+                         sl_libs_outcome = c("SL.mean", "SL.lm"),
+                         sl_libs_treatment = c("SL.glm", "SL.mean")){
   
   
   TMLE <- tmle(Y = dataframe[,outcome_name],
                A = dataframe[,treatment_name],
                W = dataframe[,covariates_names_vector],
                family = "gaussian",
-               Q.SL.library = SL.library.outcome,
-               g.SL.library = SL.library.treatment,
+               Q.SL.library = sl_libs_outcome,
+               g.SL.library = sl_libs_treatment,
                V = n.folds)
   
   return(TMLE$estimates$ATE$psi)
