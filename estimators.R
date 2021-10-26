@@ -432,7 +432,7 @@ aipw_wrapped <- function(covariates_names_vector_treatment,
                              Q.SL.library = sl_libs_outcome,
                              g.SL.library = sl_libs_treatment,
                              k_split = n.folds,
-                             verbose=TRUE)
+                             verbose=FALSE)
   return(AIPW_SL$result[3,1])
 }
 
