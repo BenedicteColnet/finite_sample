@@ -74,7 +74,7 @@ for (sample.size in c(3000, 9000)){
                                      sl_libs_outcome = SL.o,
                                      sl_libs_treatment = SL.t)
         
-        tmle.wrapper <- tmle_wrapped(covariates_names_vector = X_outcome, 
+        tmle.wrapper <- tmle_wrapper(covariates_names_vector = X_outcome, 
                                      dataframe = a_simulation, 
                                      n.folds = number_of_folds,
                                      sl_libs_outcome = SL.o,
