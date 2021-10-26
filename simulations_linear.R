@@ -29,7 +29,7 @@ different_subset_tested <- c("all.covariates",
 
 for (sample.size in c(300, 1000, 3000, 9000, 30000, 100000)){
   print(paste0("Starting sample size ", sample.size))
-  for (i in 1:50){
+  for (i in 1:30){
     for (independence in c(TRUE, FALSE)){
       
       # generate a simulation
@@ -52,11 +52,13 @@ for (sample.size in c(300, 1000, 3000, 9000, 30000, 100000)){
         } else {
           stop("error in subset.")
         }
-        
+        print(paste0("custom aipw, rep", i))
         custom_aipw_5 <- aipw_linear(X_treatment, X_outcome, dataframe = a_simulation, n.folds = 5)
         custom_aipw_20 <- aipw_linear(X_treatment, X_outcome, dataframe = a_simulation, n.folds = 20)
+        print(paste0("wrapper aipw", i))
         wrapper_5 <- aipw_wrapped(X_treatment, X_outcome, dataframe = a_simulation, n.folds = 5)
         wrapper_20 <- aipw_wrapped(X_treatment, X_outcome, dataframe = a_simulation, n.folds = 20)
+        print(paste0("wrapper tmle", i))
         wrapper_tmle <- tmle_wrapper(X_treatment, dataframe = a_simulation)
         
         new.row <- data.frame("sample.size" = rep(sample.size, 9),
