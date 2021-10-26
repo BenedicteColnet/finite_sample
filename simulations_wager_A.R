@@ -28,7 +28,7 @@ different_subset_tested <- c("all.covariates",
                              "smart",
                              "minimal.set")
 
-for (sample.size in c(300, 1000, 3000, 9000, 300000)){
+for (sample.size in c(300, 1000, 3000, 9000, 30000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:20){
     print(paste0("Repetition:", i))
@@ -53,19 +53,53 @@ for (sample.size in c(300, 1000, 3000, 9000, 300000)){
         stop("error in subset.")
       }
       
-      for (number_of_folds in c(2)){
-        custom_aipw <- aipw_ML(X_treatment, X_outcome, dataframe = a_simulation, n.folds = number_of_folds)
-        new.row <- data.frame("sample.size" = rep(sample.size, 3),
+      for (number_of_folds in c(20)){
+        
+        SL.o = c("SL.mean", "SL.lm", "SL.earth", "SL.ranger")
+        SL.t = c("SL.glm", "SL.mean", "SL.earth", "SL.ranger")
+        
+        
+        custom_aipw <- aipw_ML(covariates_names_vector_treatment = X_treatment, 
+                               covariates_names_vector_outcome = X_outcome, 
+                               dataframe = a_simulation, 
+                               n.folds = number_of_folds,
+                               sl_libs_outcome = SL.o,
+                               sl_libs_treatment = SL.t)
+        
+        aipw.wrapper <- aipw_wrapped(covariates_names_vector_treatment = X_treatment, 
+                                covariates_names_vector_outcome = X_outcome, 
+                                dataframe = a_simulation, 
+                                n.folds = number_of_folds,
+                                sl_libs_outcome = SL.o,
+                                sl_libs_treatment = SL.t)
+        
+        tmle.wrapper <- tmle_wrapper(covariates_names_vector = X_outcome, 
+                         dataframe = a_simulation, 
+                         n.folds = number_of_folds,
+                         sl_libs_outcome = SL.o,
+                         sl_libs_treatment = SL.t)
+        
+        grf.wrapper <- causal_forest_wrapper(covariates_names_vector = X_outcome, 
+                                             dataframe = a_simulation)
+        
+        
+        
+        new.row <- data.frame("sample.size" = rep(sample.size, 6),
                               "estimate" = c(custom_aipw["ipw"],
                                              custom_aipw["t.learner"],
-                                             custom_aipw["aipw"]),
+                                             custom_aipw["aipw"],
+                                             aipw.wrapper,
+                                             tmle.wrapper,
+                                             grf.wrapper),
                               "estimator" = c("ipw",
                                               "t-learner",
-                                              "aipw"),
-                              "subset" = rep(method, 3),
-                              "simulation" = rep("wager-C", 3),
-                              "cross-fitting" = rep(number_of_folds, 3))
-        print("End of AIPW")
+                                              "aipw",
+                                              "wrapper aipw",
+                                              "wrapper tmle",
+                                              "wrapper grf"),
+                              "subset" = rep(method, 6),
+                              "simulation" = rep("wager-C", 6),
+                              "cross-fitting" = c(rep(number_of_folds, 4), NA, NA))
         results.linear <- rbind(results.linear, new.row)
         
       }
