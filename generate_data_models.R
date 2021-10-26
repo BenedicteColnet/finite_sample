@@ -58,7 +58,7 @@ generate_simulation_linear <- function(n_obs = 1000, p = 12, independent_covaria
   
   # generate baseline and propensity scores
   b = X[,4] + X[,5] + X[,6]+ X[,7]+ X[,8] +  X[,9] +  X[,10]
-  e = 1/(1 + exp(-X[,1] - X[,2] -X[,3] -X[,4] -X[,5] -X[,6] -X[,7]))
+  e = 1/(1 + exp(9 + -X[,1] - X[,2] -X[,3] -X[,4] -X[,5] -X[,6] -X[,7]))
   
   # complete potential outcomes, treatment, and observed outcome
   simulation <- data.frame(X = X, b = b, e = e)
