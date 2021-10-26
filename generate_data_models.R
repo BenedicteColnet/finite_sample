@@ -1,6 +1,6 @@
 
 # simulation set up according to Wager & Nie
-generate_simulation_wager_nie <- function(n = 1000, p = 12, setup = "D"){
+generate_simulation_wager_nie <- function(n = 1000, p = 12, setup = "D", all_covariates_output = FALSE){
   
   # set-ups
   if (setup == "A"){
@@ -40,6 +40,14 @@ generate_simulation_wager_nie <- function(n = 1000, p = 12, setup = "D"){
   simulation$Y_1 <- simulation$b + 0.5*simulation$tau + rnorm(n, mean = 0, sd = 0.1)
   simulation$A <- rbinom(n, size = 1, prob = simulation$e)
   simulation$Y <- ifelse(simulation$A == 1, simulation$Y_1, simulation$Y_0)
+  
+  if(all_covariates_output){
+    return(simulation)
+  } else {
+    simulation <- simulation[, c(paste0("X.", 1:p), "A", "Y")]
+    return(simulation)
+  }
+  
   
   return(simulation)
 }
