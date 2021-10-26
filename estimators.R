@@ -175,7 +175,6 @@ aipw_linear <- function(covariates_names_vector_treatment,
   ## IPW
   ipw = mean(Y * (W/e.hat - (1-W)/(1-e.hat)))
   
-  
   res = c("ipw" = ipw, "t.learner" = t.learner, "aipw" = aipw)
   
   return(res)
@@ -322,8 +321,8 @@ aipw_ML <- function(covariates_names_vector_treatment,
   n_obs <- nrow(dataframe)
   
   # Choose libraries for our super learner
-  sl_libs_outcome <- c('SL.glm', 'SL.mean', "SL.lm", "SL.glm.interaction", "SL.polymars")
-  sl_libs_treatment <- c('SL.glm', 'SL.mean', "SL.glm.interaction", "SL.polymars")
+  sl_libs_outcome <- c('SL.glm', 'SL.mean', "SL.lm", "SL.glm.interaction", "SL.rpart")
+  sl_libs_treatment <- c('SL.glm', 'SL.mean', "SL.glm.interaction", "SL.rpart")
   # Cross-fitted estimates of E[Y|X,W=1], E[Y|X,W=0] and e(X) = P[W=1|X]
   mu.hat.1 <- rep(NA, n_obs)
   mu.hat.0 <- rep(NA, n_obs)
