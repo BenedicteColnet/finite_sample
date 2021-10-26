@@ -28,7 +28,7 @@ different_subset_tested <- c("all.covariates",
                              "smart",
                              "minimal.set")
 
-for (sample.size in c(1000, 3000, 9000)){
+for (sample.size in c(300, 1000, 3000, 9000, 300000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:20){
     print(paste0("Repetition:", i))
@@ -41,23 +41,20 @@ for (sample.size in c(1000, 3000, 9000)){
         X_treatment <- paste0("X.", 1:12)
         X_outcome <- paste0("X.", 1:12)
       } else if (method == "all.covariates.wo.instruments"){
-        X_treatment <- paste0("X.", 4:12)
-        X_outcome <- paste0("X.", 4:12)
+        X_treatment <- paste0("X.", 2:12)
+        X_outcome <- paste0("X.", 2:12)
       } else if (method == "smart"){
-        X_treatment <- paste0("X.", 4:7)
-        X_outcome <- paste0("X.", 4:10)
+        X_treatment <- paste0("X.", 2:6)
+        X_outcome <- paste0("X.", 2:3)
       } else if (method == "minimal.set"){
-        X_treatment <- paste0("X.", 4:7)
-        X_outcome <- paste0("X.", 4:7)
+        X_treatment <- paste0("X.", 2:3)
+        X_outcome <- paste0("X.", 2:3)
       } else {
         stop("error in subset.")
       }
       
       for (number_of_folds in c(2)){
-        print(paste0("FOLD: ", number_of_folds))
-        print("Start AIPW")
         custom_aipw <- aipw_ML(X_treatment, X_outcome, dataframe = a_simulation, n.folds = number_of_folds)
-        #tmle.estimate <- tmle_wrapper(covariates_names_vector = X_outcome, dataframe = a_simulation, nuisance = "linear", n.folds = number_of_folds)
         new.row <- data.frame("sample.size" = rep(sample.size, 3),
                               "estimate" = c(custom_aipw["ipw"],
                                              custom_aipw["t.learner"],
@@ -77,4 +74,4 @@ for (sample.size in c(1000, 3000, 9000)){
 }
 
 
-write.csv(x=results.linear, file="./data/2021-10-23-wager-A-ML-faster.csv")
+write.csv(x=results.linear, file="./data/2021-10-26-wager-A.csv")
