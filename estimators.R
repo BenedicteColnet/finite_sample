@@ -415,7 +415,7 @@ aipw_ML <- function(covariates_names_vector_treatment,
   return(res)
 }
 
-aipw_wrapper <- function(covariates_names_vector_treatment,
+aipw_wrapped <- function(covariates_names_vector_treatment,
                          covariates_names_vector_outcome,
                          dataframe,
                          outcome_name = "Y",
@@ -424,16 +424,18 @@ aipw_wrapper <- function(covariates_names_vector_treatment,
                          sl_libs_outcome = c("SL.mean", "SL.lm"),
                          sl_libs_treatment =  c("SL.glm", "SL.mean")){
   
-  AIPW_SL <- aipw_wrapper(Y = dataframe[, outcome_name],
-                          A = dataframe[, treatment_name],
-                          W.Q = dataframe[,covariates_names_vector_outcome], 
-                          W.g = dataframe[,covariates_names_vector_treatment], 
-                          Q.SL.library = sl_libs_outcome,
-                          g.SL.library = sl_libs_treatment,
-                          k_split = n.folds,
-                          verbose=TRUE)
+  AIPW_SL <-    aipw_wrapper(Y = dataframe[, outcome_name],
+                             A = dataframe[, treatment_name],
+                             W = NULL,
+                             W.Q = dataframe[,covariates_names_vector_outcome], 
+                             W.g = dataframe[,covariates_names_vector_treatment], 
+                             Q.SL.library = sl_libs_outcome,
+                             g.SL.library = sl_libs_treatment,
+                             k_split = n.folds,
+                             verbose=TRUE)
   return(AIPW_SL$result[3,1])
 }
+
 
 
 
