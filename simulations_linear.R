@@ -18,7 +18,8 @@ results.linear <- data.frame("sample.size" = c(),
                              "estimator" = c(),
                              "subset" = c(),
                              "simulation" = c(),
-                             "cross-fitting" = c())
+                             "cross-fitting" = c(),
+                             "independence" = c())
 
 different_subset_tested <- c("all.covariates",
                              "all.covariates.wo.instruments",
@@ -28,45 +29,60 @@ different_subset_tested <- c("all.covariates",
 for (sample.size in c(300, 1000, 3000, 9000, 30000, 100000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:50){
-    # generate a simulation
-    a_simulation <- generate_simulation_linear(n_obs = sample.size, independent_covariate = FALSE)
-    
-    # choose subset
-    for (method in different_subset_tested){
-      if (method == "all.covariates"){
-        X_treatment <- paste0("X.", 1:12)
-        X_outcome <- paste0("X.", 1:12)
-      } else if (method == "all.covariates.wo.instruments"){
-        X_treatment <- paste0("X.", 4:12)
-        X_outcome <- paste0("X.", 4:12)
-      } else if (method == "smart"){
-        X_treatment <- paste0("X.", 4:7)
-        X_outcome <- paste0("X.", 4:10)
-      } else if (method == "minimal.set"){
-        X_treatment <- paste0("X.", 4:7)
-        X_outcome <- paste0("X.", 4:7)
-      } else {
-        stop("error in subset.")
-      }
+    for (independence in c(TRUE, FALSE)){
       
-      for (number_of_folds in c(2, 10)){
-        custom_aipw <- aipw_linear(X_treatment, X_outcome, dataframe = a_simulation, n.folds = number_of_folds)
-        tmle.estimate <- tmle_wrapper(covariates_names_vector = X_outcome, dataframe = a_simulation, nuisance = "linear", n.folds = number_of_folds)
-        new.row <- data.frame("sample.size" = rep(sample.size, 4),
-                              "estimate" = c(custom_aipw["ipw"],
-                                             custom_aipw["t.learner"],
-                                             custom_aipw["aipw"],
-                                             tmle.estimate),
-                              "estimator" = c("ipw",
-                                              "t-learner",
-                                              "aipw",
-                                              "tmle"),
-                              "subset" = rep(method, 4),
-                              "simulation" = rep("linear", 4),
-                              "cross-fitting" = rep(number_of_folds, 4))
+      # generate a simulation
+      a_simulation <- generate_simulation_linear(n_obs = sample.size, independent_covariate = independence)
+      
+      # choose subset
+      for (method in different_subset_tested){
+        if (method == "all.covariates"){
+          X_treatment <- paste0("X.", 1:12)
+          X_outcome <- paste0("X.", 1:12)
+        } else if (method == "all.covariates.wo.instruments"){
+          X_treatment <- paste0("X.", 4:12)
+          X_outcome <- paste0("X.", 4:12)
+        } else if (method == "smart"){
+          X_treatment <- paste0("X.", 4:7)
+          X_outcome <- paste0("X.", 4:10)
+        } else if (method == "minimal.set"){
+          X_treatment <- paste0("X.", 4:7)
+          X_outcome <- paste0("X.", 4:7)
+        } else {
+          stop("error in subset.")
+        }
         
+        custom_aipw_5 <- aipw_linear(X_treatment, X_outcome, dataframe = a_simulation, n.folds = 5)
+        custom_aipw_20 <- aipw_linear(X_treatment, X_outcome, dataframe = a_simulation, n.folds = 20)
+        wrapper_5 <- aipw_wrapper(X_treatment, X_outcome, dataframe = a_simulation, n.folds = 5)
+        wrapper_20 <- aipw_wrapper(X_treatment, X_outcome, dataframe = a_simulation, n.folds = 20)
+        wrapper_tmle <- tmle_wrapper(X_treatment, dataframe = a_simulation)
+        
+        new.row <- data.frame("sample.size" = rep(sample.size, 9),
+                              "estimate" = c(custom_aipw_5["ipw"],
+                                             custom_aipw_5["t.learner"],
+                                             custom_aipw_20["aipw"],
+                                             custom_aipw_20["ipw"],
+                                             custom_aipw_20["t.learner"],
+                                             wrapper_5,
+                                             wrapper_20,
+                                             wrapper_tmle),
+                                "estimator" = c("ipw",
+                                                "t-learner",
+                                                "aipw",
+                                                "ipw",
+                                                "t-learner",
+                                                "aipw",
+                                                "wrapper aipw",
+                                                "wrapper aipw",
+                                                "wrapper tmle"),
+                                "subset" = rep(method, 9),
+                                "simulation" = rep("linear", 9),
+                                "cross-fitting" = c(5,5,5,20,20,20,5,20,NA),
+                                "independence" = rep(independence, 9))
+          
         results.linear <- rbind(results.linear, new.row)
-        
+      
       }
     }
   }
@@ -74,4 +90,4 @@ for (sample.size in c(300, 1000, 3000, 9000, 30000, 100000)){
 
 results.linear$sample.size <- as.factor(results.linear$sample.size)
 
-write.csv(x=results.linear, file="./data/2021-10-26-linear-nonindep-constant-ate.csv")
+write.csv(x=results.linear, file="./data/2021-10-26-linear-constant-ate.csv")
