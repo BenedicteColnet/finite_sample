@@ -29,7 +29,7 @@ different_subset_tested <- c("all.covariates",
                              "smart",
                              "minimal.set")
 
-for (sample.size in c(300, 1000, 3000, 9000, 30000)){
+for (sample.size in c(3000, 9000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:20){
     print(paste0("Repetition:", i))
@@ -54,10 +54,10 @@ for (sample.size in c(300, 1000, 3000, 9000, 30000)){
         stop("error in subset.")
       }
       
-      for (number_of_folds in c(20)){
+      for (number_of_folds in c(2)){
         
-        SL.o = c("SL.mean", "SL.lm", "SL.earth", "SL.ranger")
-        SL.t = c("SL.glm", "SL.mean", "SL.earth", "SL.ranger")
+        SL.o = c("SL.mean", "SL.lm", "SL.ranger", "SL.glmnet")
+        SL.t = c("SL.glm", "SL.mean", "SL.ranger", "SL.glmnet")
         
         
         custom_aipw <- aipw_ML(covariates_names_vector_treatment = X_treatment, 
