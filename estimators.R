@@ -200,22 +200,10 @@ tmle_wrapper <- function(covariates_names_vector,
                          dataframe,
                          outcome_name = "Y",
                          treatment_name = "A",
-                         nuisance = "glmnet",
                          n.folds = 2,
-                         automate = FALSE){
-  
-  if (nuisance == "glmnet"){
-    SL.library<- c("SL.glm", "SL.glmnet", "SL.glm.interaction")
-  } else if (nuisance == "forest"){
-    SL.library <- c("SL.glm", "SL.ranger")
-  } else if (nuisance == "linear"){
-    SL.library.outcome <- c("SL.lm")
-    SL.library.treatment <- c("SL.glm")
-  } else {
-    stop("error in nuisance - TMLE")
-  }
-  
-  # ranger takes way more time
+                         automate = FALSE,
+                         SL.library.outcome = c("SL.mean", "SL.lm"),
+                         SL.library.treatment = c("SL.glm", "SL.mean")){
   
   
   TMLE <- tmle(Y = dataframe[,outcome_name],
