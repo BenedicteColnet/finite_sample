@@ -29,7 +29,7 @@ different_subset_tested <- c("all.covariates",
                              "smart",
                              "minimal.set")
 
-for (sample.size in c(3000, 9000)){
+for (sample.size in c(3000, 9000, 30000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:20){
     print(paste0("Repetition:", i))
@@ -54,7 +54,7 @@ for (sample.size in c(3000, 9000)){
         stop("error in subset.")
       }
       
-      for (number_of_folds in c(2)){
+      for (number_of_folds in c(5)){
         
         SL.o = c("SL.mean", "SL.lm", "SL.ranger", "SL.glmnet")
         SL.t = c("SL.glm", "SL.mean", "SL.ranger", "SL.glmnet")
@@ -109,4 +109,4 @@ for (sample.size in c(3000, 9000)){
 }
 
 
-write.csv(x=results.linear, file="./data/2021-10-26-wager-A.csv")
+write.csv(x=results.linear, file="./data/2021-10-27-wager-A.csv")
