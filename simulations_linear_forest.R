@@ -75,7 +75,7 @@ for (sample.size in c(300, 1000, 3000, 9000, 30000)){
                                                   "aipw"),3),
                               "subset" = rep(method, 9),
                               "simulation" = rep("linear.constant.cate", 9),
-                              "cross-fitting" = rep(c(1,2,10), 3),
+                              "cross-fitting" = c(1,1,1,2,2,2,10,10,10),
                               "independence" = rep(independence, 9),
                               "nuisance" = rep("forest", 9))
         
