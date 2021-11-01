@@ -87,4 +87,4 @@ for (sample.size in c(300, 1000, 3000, 9000, 30000)){
 
 results.linear$sample.size <- as.factor(results.linear$sample.size)
 
-write.csv(x=results.linear, file="./data/2021-11-01-linear-constant-ate-linear-nuisance.csv")
+write.csv(x=results.linear, file="./data/2021-11-01-linear-constant-ate-forest-nuisance.csv")
