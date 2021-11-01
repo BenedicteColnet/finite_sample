@@ -10,7 +10,7 @@ library(mvtnorm) # rmvnorm
 library(tmle)
 library(SuperLearner)
 library(AIPW)
-library(randomForest)
+library(grf)
 
 source("estimators.R")
 source("generate_data_models.R")
