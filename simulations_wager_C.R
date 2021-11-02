@@ -22,28 +22,30 @@ results.linear <- data.frame("sample.size" = c(),
                              "estimator" = c(),
                              "subset" = c(),
                              "simulation" = c(),
-                             "cross-fitting" = c())
+                             "cross-fitting" = c(),
+                             "independence" = c(),
+                             "nuisance" = c())
 
-different_subset_tested <- c("all.covariates",
-                             "all.covariates.wo.instruments",
+different_subset_tested <- c("outcome.and.instruments",
+                             "outcome.wo.instruments",
                              "smart",
                              "minimal.set")
 
-for (sample.size in c(3000, 9000, 30000)){
+for (sample.size in c(1000, 3000, 9000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:20){
-    print(paste0("Repetition:", i))
+
     # generate a simulation
     a_simulation <- generate_simulation_wager_nie(n = sample.size, setup = "C")
     
     # choose subset
     for (method in different_subset_tested){
-      if (method == "all.covariates"){
-        X_treatment <- paste0("X.", 1:12)
-        X_outcome <- paste0("X.", 1:12)
-      } else if (method == "all.covariates.wo.instruments"){
-        X_treatment <- paste0("X.", 2:12)
-        X_outcome <- paste0("X.", 2:12)
+      if (method == "outcome.and.instruments"){
+        X_treatment <- paste0("X.", 1:6)
+        X_outcome <- paste0("X.", 1:6)
+      } else if (method == "outcome.wo.instruments"){
+        X_treatment <- paste0("X.", 2:6)
+        X_outcome <- paste0("X.", 2:6)
       } else if (method == "smart"){
         X_treatment <- paste0("X.", 2:6)
         X_outcome <- paste0("X.", 2:3)
@@ -56,51 +58,57 @@ for (sample.size in c(3000, 9000, 30000)){
       
       for (number_of_folds in c(5)){
         
-        SL.o = c("SL.mean", "SL.lm", "SL.ranger", "SL.glmnet")
-        SL.t = c("SL.glm", "SL.mean", "SL.ranger", "SL.glmnet")
+        #SL.o = c("SL.mean", "SL.lm", "SL.ranger", "SL.glmnet")
+        #SL.t = c("SL.glm", "SL.mean", "SL.ranger", "SL.glmnet")
         
         
-        custom_aipw <- aipw_ML(covariates_names_vector_treatment = X_treatment, 
-                               covariates_names_vector_outcome = X_outcome, 
-                               dataframe = a_simulation, 
-                               n.folds = number_of_folds,
-                               sl_libs_outcome = SL.o,
-                               sl_libs_treatment = SL.t)
+        # custom_aipw <- aipw_ML(covariates_names_vector_treatment = X_treatment, 
+        #                        covariates_names_vector_outcome = X_outcome, 
+        #                        dataframe = a_simulation, 
+        #                        n.folds = number_of_folds,
+        #                        sl_libs_outcome = SL.o,
+        #                        sl_libs_treatment = SL.t)
         
-        aipw.wrapper <- aipw_wrapped(covariates_names_vector_treatment = X_treatment, 
-                                     covariates_names_vector_outcome = X_outcome, 
-                                     dataframe = a_simulation, 
-                                     n.folds = number_of_folds,
-                                     sl_libs_outcome = SL.o,
-                                     sl_libs_treatment = SL.t)
+        # aipw.wrapper <- aipw_wrapped(covariates_names_vector_treatment = X_treatment, 
+        #                              covariates_names_vector_outcome = X_outcome, 
+        #                              dataframe = a_simulation, 
+        #                              n.folds = number_of_folds,
+        #                              sl_libs_outcome = SL.o,
+        #                              sl_libs_treatment = SL.t)
+         
+        # tmle.wrapper <- tmle_wrapper(covariates_names_vector = X_outcome, 
+        #                              dataframe = a_simulation, 
+        #                              n.folds = number_of_folds,
+        #                              sl_libs_outcome = SL.o,
+        #                              sl_libs_treatment = SL.t)
         
-        tmle.wrapper <- tmle_wrapper(covariates_names_vector = X_outcome, 
-                                     dataframe = a_simulation, 
-                                     n.folds = number_of_folds,
-                                     sl_libs_outcome = SL.o,
-                                     sl_libs_treatment = SL.t)
-        
-        grf.wrapper <- causal_forest_wrapper(covariates_names_vector = X_outcome, 
-                                             dataframe = a_simulation)
+        # grf.wrapper <- causal_forest_wrapper(covariates_names_vector = X_outcome, 
+        #                                      dataframe = a_simulation)
         
         
+        custom_aipw_2_splines <- aipw_splines(X_treatment, X_outcome, dataframe = a_simulation, n.folds = 2)
+        custom_aipw_2_forest <- aipw_forest(X_treatment, X_outcome, dataframe = a_simulation, n.folds = 2)
+        custom_aipw_2_linear <- aipw_linear(X_treatment, X_outcome, dataframe = a_simulation, n.folds = 2)
         
-        new.row <- data.frame("sample.size" = rep(sample.size, 6),
-                              "estimate" = c(custom_aipw["ipw"],
-                                             custom_aipw["t.learner"],
-                                             custom_aipw["aipw"],
-                                             aipw.wrapper,
-                                             tmle.wrapper,
-                                             grf.wrapper),
-                              "estimator" = c("ipw",
+        
+        new.row <- data.frame("sample.size" = rep(sample.size, 9),
+                              "estimate" = c(custom_aipw_2_splines["ipw"],
+                                             custom_aipw_2_splines["t.learner"],
+                                             custom_aipw_2_splines["aipw"],
+                                             custom_aipw_2_forest["ipw"],
+                                             custom_aipw_2_forest["t.learner"],
+                                             custom_aipw_2_forest["aipw"],
+                                             custom_aipw_2_linear["ipw"],
+                                             custom_aipw_2_linear["t.learner"],
+                                             custom_aipw_2_linear["aipw"]),
+                              "estimator" = rep(c("ipw",
                                               "t-learner",
-                                              "aipw",
-                                              "wrapper aipw",
-                                              "wrapper tmle",
-                                              "wrapper grf"),
+                                              "aipw"),3),
                               "subset" = rep(method, 6),
                               "simulation" = rep("wager-C", 6),
-                              "cross-fitting" = c(rep(number_of_folds, 4), NA, NA))
+                              "cross-fitting" = rep(2,9),
+                              "independence" = rep(NA,9),
+                              "nuisance" = c("splines","splines","splines", "forest","forest","forest", "linear", "linear","linear"))
         results.linear <- rbind(results.linear, new.row)
         
       }
@@ -109,4 +117,4 @@ for (sample.size in c(3000, 9000, 30000)){
 }
 
 
-write.csv(x=results.linear, file="./data/2021-10-27-wager-C.csv")
+write.csv(x=results.linear, file="./data/2021-11-02-wager-C.csv")
