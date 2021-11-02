@@ -104,8 +104,8 @@ for (sample.size in c(1000, 3000, 9000)){
                               "estimator" = rep(c("ipw",
                                               "t-learner",
                                               "aipw"),3),
-                              "subset" = rep(method, 6),
-                              "simulation" = rep("wager-C", 6),
+                              "subset" = rep(method, 9),
+                              "simulation" = rep("wager-C", 9),
                               "cross-fitting" = rep(2,9),
                               "independence" = rep(NA,9),
                               "nuisance" = c("splines","splines","splines", "forest","forest","forest", "linear", "linear","linear"))
