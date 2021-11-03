@@ -72,7 +72,7 @@ for (sample.size in c(3000)){
                               "simulation" = rep("linear.constant.cate", 6),
                               "cross-fitting" = c(100,100,100,2,2,2),
                               "independence" = rep(independence, 6),
-                              "nuisance" = rep("forest","forest","forest","linear", "linear", "linear"))
+                              "nuisance" = c("forest","forest","forest","linear", "linear", "linear"))
         
         results.linear <- rbind(results.linear, new.row)
         
