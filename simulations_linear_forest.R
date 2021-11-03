@@ -32,7 +32,7 @@ different_subset_tested <- c(#"outcome.and.instruments",
 for (sample.size in c(300, 1000, 3000, 9000, 30000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:30){
-    for (independence in c(TRUE, FALSE)){
+    for (independence in c(FALSE)){
       
       # generate a simulation
       a_simulation <- generate_simulation_linear(n_obs = sample.size, independent_covariate = independence)
@@ -57,7 +57,8 @@ for (sample.size in c(300, 1000, 3000, 9000, 30000)){
         
         #custom_aipw_1 <- aipw_forest(X_treatment, X_outcome, dataframe = a_simulation, n.folds = 1, min.node.size.if.forest = 1)
         custom_aipw_db_ml <- aipw_forest_double_ml(X_treatment, X_outcome, dataframe = a_simulation, min.node.size.if.forest = 1)
-        linear_estimate <- aipw_linear(X_treatment, X_outcome, dataframe = a_simulation)
+        #linear_estimate <- aipw_linear(X_treatment, X_outcome, dataframe = a_simulation)
+        custom_aipw_2 <- aipw_forest(X_treatment, X_outcome, dataframe = a_simulation, n.folds = 2, min.node.size.if.forest = 1)
         #custom_aipw_10 <- aipw_forest(X_treatment, X_outcome, dataframe = a_simulation, n.folds = 10, min.node.size.if.forest = 1)
         
         
@@ -65,9 +66,9 @@ for (sample.size in c(300, 1000, 3000, 9000, 30000)){
                               "estimate" = c(custom_aipw_db_ml["ipw"],
                                              custom_aipw_db_ml["t.learner"],
                                              custom_aipw_db_ml["aipw"],
-                                             linear_estimate["ipw"],
-                                             linear_estimate["t.learner"],
-                                             linear_estimate["aipw"]),
+                                             custom_aipw_2["ipw"],
+                                             custom_aipw_2["t.learner"],
+                                             custom_aipw_2["aipw"]),
                               "estimator" = rep(c("ipw",
                                                   "t-learner",
                                                   "aipw"),2),
@@ -75,7 +76,7 @@ for (sample.size in c(300, 1000, 3000, 9000, 30000)){
                               "simulation" = rep("linear.constant.cate", 6),
                               "cross-fitting" = c(3,3,3,2,2,2),
                               "independence" = rep(independence, 6),
-                              "nuisance" = c("forest","forest","forest", "linear", "linear", "linear"))
+                              "nuisance" = c("forest DML","forest DML","forest DML", "forest", "forest", "forest"))
         
         results.linear <- rbind(results.linear, new.row)
         
