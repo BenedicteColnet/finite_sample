@@ -29,7 +29,7 @@ different_subset_tested <- c(#"outcome.and.instruments",
                              "smart") #,
                              #"minimal.set")
 
-for (sample.size in c(300, 1000, 3000, 9000, 30000)){
+for (sample.size in c(1000, 3000, 9000, 30000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:30){
     for (independence in c(FALSE)){
@@ -58,7 +58,7 @@ for (sample.size in c(300, 1000, 3000, 9000, 30000)){
         #custom_aipw_1 <- aipw_forest(X_treatment, X_outcome, dataframe = a_simulation, n.folds = 1, min.node.size.if.forest = 1)
         custom_aipw_db_ml <- aipw_forest_double_ml(X_treatment, X_outcome, dataframe = a_simulation, min.node.size.if.forest = 1)
         #linear_estimate <- aipw_linear(X_treatment, X_outcome, dataframe = a_simulation)
-        custom_aipw_2 <- aipw_forest(X_treatment, X_outcome, dataframe = a_simulation, n.folds = 2, min.node.size.if.forest = 1)
+        custom_aipw_2 <- aipw_forest(X_treatment, X_outcome, dataframe = a_simulation, n.folds = 3, min.node.size.if.forest = 1)
         #custom_aipw_10 <- aipw_forest(X_treatment, X_outcome, dataframe = a_simulation, n.folds = 10, min.node.size.if.forest = 1)
         
         
@@ -74,7 +74,7 @@ for (sample.size in c(300, 1000, 3000, 9000, 30000)){
                                                   "aipw"),2),
                               "subset" = rep(method, 6),
                               "simulation" = rep("linear.constant.cate", 6),
-                              "cross-fitting" = c(3,3,3,2,2,2),
+                              "cross-fitting" = c(3,3,3,3,3,3),
                               "independence" = rep(independence, 6),
                               "nuisance" = c("forest DML","forest DML","forest DML", "forest", "forest", "forest"))
         
