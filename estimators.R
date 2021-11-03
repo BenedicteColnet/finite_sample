@@ -135,66 +135,66 @@ aipw_forest_double_ml <- function(covariates_names_vector_treatment,
   
   
   # Estimation
-  outcome.model.treated_k23 <- regression_forest(X = dataframe[-idx1 & dataframe[,treatment_name] == 1, covariates_names_vector_outcome], 
-                                                 Y = dataframe[-idx1 & dataframe[,treatment_name] == 1, outcome_name], 
-                                                 num.trees = 500, 
-                                                 min.node.size = min.node.size.if.forest)
+  outcome.model.treated_k1 <- regression_forest(X = dataframe[idx1 & dataframe[,treatment_name] == 1, covariates_names_vector_outcome], 
+                                                Y = dataframe[idx1 & dataframe[,treatment_name] == 1, outcome_name], 
+                                                num.trees = 500, 
+                                                min.node.size = min.node.size.if.forest)
   
   
-  outcome.model.treated_k13 <- regression_forest(X = dataframe[-idx2 & dataframe[,treatment_name] == 1, covariates_names_vector_outcome], 
-                                                 Y = dataframe[-idx2 & dataframe[,treatment_name] == 1, outcome_name], 
-                                                 num.trees = 500, 
-                                                 min.node.size = min.node.size.if.forest)
+  outcome.model.treated_k2 <- regression_forest(X = dataframe[idx2 & dataframe[,treatment_name] == 1, covariates_names_vector_outcome], 
+                                                Y = dataframe[idx2 & dataframe[,treatment_name] == 1, outcome_name], 
+                                                num.trees = 500, 
+                                                min.node.size = min.node.size.if.forest)
   
-  outcome.model.treated_k12 <- regression_forest(X = dataframe[-idx3 & dataframe[,treatment_name] == 1, covariates_names_vector_outcome], 
-                                                 Y = dataframe[-idx3 & dataframe[,treatment_name] == 1, outcome_name], 
-                                                 num.trees = 500, 
-                                                 min.node.size = min.node.size.if.forest)
+  outcome.model.treated_k3 <- regression_forest(X = dataframe[idx3 & dataframe[,treatment_name] == 1, covariates_names_vector_outcome], 
+                                                Y = dataframe[idx3 & dataframe[,treatment_name] == 1, outcome_name], 
+                                                num.trees = 500, 
+                                                min.node.size = min.node.size.if.forest)
   
-  outcome.model.control_k23 <- regression_forest(X = dataframe[-idx1 & dataframe[,treatment_name] == 0, covariates_names_vector_outcome], 
-                                                 Y = dataframe[-idx1 & dataframe[,treatment_name] == 0, outcome_name], 
-                                                 num.trees = 500, 
-                                                 min.node.size = min.node.size.if.forest)
+  outcome.model.control_k1 <- regression_forest(X = dataframe[idx1 & dataframe[,treatment_name] == 0, covariates_names_vector_outcome], 
+                                                Y = dataframe[idx1 & dataframe[,treatment_name] == 0, outcome_name], 
+                                                num.trees = 500, 
+                                                min.node.size = min.node.size.if.forest)
   
-  outcome.model.control_k13 <- regression_forest(X = dataframe[-idx2 & dataframe[,treatment_name] == 0, covariates_names_vector_outcome], 
-                                                 Y = dataframe[-idx2 & dataframe[,treatment_name] == 0, outcome_name], 
-                                                 num.trees = 500, 
-                                                 min.node.size = min.node.size.if.forest)
+  outcome.model.control_k2 <- regression_forest(X = dataframe[idx2 & dataframe[,treatment_name] == 0, covariates_names_vector_outcome], 
+                                                Y = dataframe[idx2 & dataframe[,treatment_name] == 0, outcome_name], 
+                                                num.trees = 500, 
+                                                min.node.size = min.node.size.if.forest)
   
-  outcome.model.control_k12 <- regression_forest(X = dataframe[-idx3 & dataframe[,treatment_name] == 0, covariates_names_vector_outcome], 
-                                                 Y = dataframe[-idx3 & dataframe[,treatment_name] == 0, outcome_name], 
-                                                 num.trees = 500, 
-                                                 min.node.size = min.node.size.if.forest)
+  outcome.model.control_k3 <- regression_forest(X = dataframe[idx3 & dataframe[,treatment_name] == 0, covariates_names_vector_outcome], 
+                                                Y = dataframe[idx3 & dataframe[,treatment_name] == 0, outcome_name], 
+                                                num.trees = 500, 
+                                                min.node.size = min.node.size.if.forest)
   
   
-  propensity.model_k23 <- probability_forest(dataframe[-idx1, covariates_names_vector_treatment], 
-                                             as.factor(W[-idx1]), 
-                                             num.trees = 500, 
-                                             min.node.size=min.node.size.if.forest)
+  propensity.model_k1 <- probability_forest(dataframe[idx1, covariates_names_vector_treatment], 
+                                            as.factor(W[idx1]), 
+                                            num.trees = 500, 
+                                            min.node.size=min.node.size.if.forest)
   
-  propensity.model_k13 <- probability_forest(dataframe[-idx2, covariates_names_vector_treatment], 
-                                             as.factor(W[-idx2]), 
-                                             num.trees = 500, 
-                                             min.node.size=min.node.size.if.forest)
+  propensity.model_k2 <- probability_forest(dataframe[idx2, covariates_names_vector_treatment], 
+                                            as.factor(W[idx2]), 
+                                            num.trees = 500, 
+                                            min.node.size=min.node.size.if.forest)
   
-  propensity.model_k12 <- probability_forest(dataframe[-idx3, covariates_names_vector_treatment], 
-                                             as.factor(W[-idx3]), 
-                                             num.trees = 500, 
-                                             min.node.size=min.node.size.if.forest)
+  propensity.model_k3 <- probability_forest(dataframe[idx3, covariates_names_vector_treatment], 
+                                            as.factor(W[idx3]), 
+                                            num.trees = 500, 
+                                            min.node.size=min.node.size.if.forest)
   
   
   # Prediction
-  mu.hat.1[idx1] <- predict(outcome.model.treated_k23, newdata = xt1[idx1,])$predictions
-  mu.hat.0[idx1] <- predict(outcome.model.control_k23, newdata = xt0[idx1,])$predictions
-  e.hat[idx1] <- predict(propensity.model_k23, newdata = X_t[idx1,])$predictions[,2]
+  mu.hat.1[idx1] <- predict(outcome.model.treated_k2, newdata = xt1[idx1,])$predictions
+  mu.hat.0[idx1] <- predict(outcome.model.control_k2, newdata = xt0[idx1,])$predictions
+  e.hat[idx1] <- predict(propensity.model_k3, newdata = X_t[idx1,])$predictions[,2]
   
-  mu.hat.1[idx2] <- predict(outcome.model.treated_k13, newdata = xt1[idx2,])$predictions
-  mu.hat.0[idx2] <- predict(outcome.model.control_k13, newdata = xt0[idx2,])$predictions
-  e.hat[idx2] <- predict(propensity.model_k13, newdata = X_t[idx2,])$predictions[,2]
+  mu.hat.1[idx2] <- predict(outcome.model.treated_k3, newdata = xt1[idx2,])$predictions
+  mu.hat.0[idx2] <- predict(outcome.model.control_k3, newdata = xt0[idx2,])$predictions
+  e.hat[idx2] <- predict(propensity.model_k1, newdata = X_t[idx2,])$predictions[,2]
   
-  mu.hat.1[idx3] <- predict(outcome.model.treated_k12, newdata = xt1[idx3,])$predictions
-  mu.hat.0[idx3] <- predict(outcome.model.control_k12, newdata = xt0[idx3,])$predictions
-  e.hat[idx3] <- predict(propensity.model_k12, newdata = X_t[idx3,])$predictions[,2]
+  mu.hat.1[idx3] <- predict(outcome.model.treated_k1, newdata = xt1[idx3,])$predictions
+  mu.hat.0[idx3] <- predict(outcome.model.control_k1, newdata = xt0[idx3,])$predictions
+  e.hat[idx3] <- predict(propensity.model_k2, newdata = X_t[idx3,])$predictions[,2]
   
   
   
@@ -215,6 +215,7 @@ aipw_forest_double_ml <- function(covariates_names_vector_treatment,
   
   return(res)
 }
+
 
 
 # Custom AIPW with linear and logit model
