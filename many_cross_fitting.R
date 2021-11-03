@@ -55,7 +55,7 @@ for (sample.size in c(3000)){
         
 
         custom_aipw_100 <- aipw_forest(X_treatment, X_outcome, dataframe = a_simulation, n.folds = 100, min.node.size.if.forest = 3)
-        custom_aipw_linear <- aipw_linear(X_treatment, X_outcome, dataframe = a_simulation, n.folds = 2, min.node.size.if.forest = 3)
+        custom_aipw_linear <- aipw_linear(X_treatment, X_outcome, dataframe = a_simulation, n.folds = 2)
         
         
         new.row <- data.frame("sample.size" = rep(sample.size, 6),
