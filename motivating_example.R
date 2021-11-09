@@ -6,6 +6,7 @@ library(dplyr) # case_when and others
 library(ggplot2)
 library(tidyr) # pivot
 library(glmnet)
+library(ranger) # efficient forest
 library(mvtnorm) # rmvnorm
 library(tmle)
 library(SuperLearner)
