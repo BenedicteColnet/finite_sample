@@ -73,7 +73,7 @@ for (sample.size in c(300, 1000, 3000, 9000, 30000, 100000)){
                               "subset" = rep(method, 6),
                               "simulation" = rep(simulation, 6),
                               "cross-fitting" = rep(2, 6),
-                              "nuisance" = c(rep("linear", 3)), rep("forest", 3))
+                              "nuisance" = c("linear", "linear","linear", "forest", "forest", "forest"))
         
         results.linear <- rbind(results.linear, new.row)
         
@@ -84,4 +84,4 @@ for (sample.size in c(300, 1000, 3000, 9000, 30000, 100000)){
 
 results.linear$sample.size <- as.factor(results.linear$sample.size)
 
-write.csv(x=results.linear, file="./data/2021-11-01-linear-constant-ate-linear-nuisance.csv")
+write.csv(x=results.linear, file="./data/2021-11-09-motivating.csv")
