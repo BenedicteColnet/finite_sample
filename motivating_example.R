@@ -26,7 +26,7 @@ results.linear <- data.frame("sample.size" = c(),
 different_subset_tested <- c("outcome.wo.instruments",
                              "minimal.set")
 
-for (sample.size in c(300, 1000, 3000, 9000, 30000, 100000)){
+for (sample.size in c(300, 1000, 3000, 9000, 30000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:30){
     for (simulation in c("linear", "non.linear")){
