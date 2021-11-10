@@ -30,6 +30,7 @@ for (sample.size in c(300, 1000, 3000, 9000, 30000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:30){
     for (simulation in c("linear", "non.linear")){
+      for (method in different_subset_tested){
       
       # generate a simulation
       if (simulation == "linear"){
@@ -37,29 +38,27 @@ for (sample.size in c(300, 1000, 3000, 9000, 30000)){
         a_simulation <- generate_simulation_linear(n_obs = sample.size, independent_covariate = FALSE)
         
           # choose subset
-          for (method in different_subset_tested){
-            if (method == "outcome.and.instruments"){
+         if (method == "outcome.and.instruments"){
               X_treatment <- paste0("X.", 1:10)
               X_outcome <- paste0("X.", 1:10)
-            } else if (method == "outcome.wo.instruments"){
+          } else if (method == "outcome.wo.instruments"){
               X_treatment <- paste0("X.", 4:10)
               X_outcome <- paste0("X.", 4:10)
-            } else if (method == "smart"){
+          } else if (method == "smart"){
               X_treatment <- paste0("X.", 4:7)
               X_outcome <- paste0("X.", 4:10)
-            } else if (method == "minimal.set"){
+          } else if (method == "minimal.set"){
               
-            } else {
+          } else {
               stop("error in subset.")
-            }
-          } 
+          }
         
         }else {
         
-        a_simulation <-  generate_simulation_wager_nie(n = sample.size, setup = "C")
+        a_simulation <-  generate_simulation_wager_nie(n = sample.size, setup = "A")
         
           # choose subset
-          for (method in different_subset_tested){
+         
             if (method == "outcome.and.instruments"){
               X_treatment <- paste0("X.", 1:6)
               X_outcome <- paste0("X.", 1:6)
@@ -76,7 +75,6 @@ for (sample.size in c(300, 1000, 3000, 9000, 30000)){
               stop("error in subset.")
             }
           }
-      }
      
         
         custom_aipw_linear <- aipw_linear(X_treatment, X_outcome, dataframe = a_simulation, n.folds = 2)
@@ -99,7 +97,7 @@ for (sample.size in c(300, 1000, 3000, 9000, 30000)){
                               "nuisance" = c("linear", "linear","linear", "forest", "forest", "forest"))
         
         results.linear <- rbind(results.linear, new.row)
-        
+      }  
     }
   }
 }
