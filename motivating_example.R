@@ -52,8 +52,9 @@ for (sample.size in c(300, 1000, 3000, 9000, 30000)){
             } else {
               stop("error in subset.")
             }
-          
-      } else {
+          } 
+        
+        }else {
         
         a_simulation <-  generate_simulation_wager_nie(n = sample.size, setup = "C")
         
