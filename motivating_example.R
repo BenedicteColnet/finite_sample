@@ -36,43 +36,44 @@ for (sample.size in c(300, 1000, 3000, 9000, 30000)){
         
         a_simulation <- generate_simulation_linear(n_obs = sample.size, independent_covariate = FALSE)
         
-        # choose subset
-        for (method in different_subset_tested){
-          if (method == "outcome.and.instruments"){
-            X_treatment <- paste0("X.", 1:10)
-            X_outcome <- paste0("X.", 1:10)
-          } else if (method == "outcome.wo.instruments"){
-            X_treatment <- paste0("X.", 4:10)
-            X_outcome <- paste0("X.", 4:10)
-          } else if (method == "smart"){
-            X_treatment <- paste0("X.", 4:7)
-            X_outcome <- paste0("X.", 4:10)
-          } else if (method == "minimal.set"){
-            
-          } else {
-            stop("error in subset.")
-          }
+          # choose subset
+          for (method in different_subset_tested){
+            if (method == "outcome.and.instruments"){
+              X_treatment <- paste0("X.", 1:10)
+              X_outcome <- paste0("X.", 1:10)
+            } else if (method == "outcome.wo.instruments"){
+              X_treatment <- paste0("X.", 4:10)
+              X_outcome <- paste0("X.", 4:10)
+            } else if (method == "smart"){
+              X_treatment <- paste0("X.", 4:7)
+              X_outcome <- paste0("X.", 4:10)
+            } else if (method == "minimal.set"){
+              
+            } else {
+              stop("error in subset.")
+            }
           
       } else {
         
         a_simulation <-  generate_simulation_wager_nie(n = sample.size, setup = "C")
         
-        # choose subset
-        for (method in different_subset_tested){
-          if (method == "outcome.and.instruments"){
-            X_treatment <- paste0("X.", 1:6)
-            X_outcome <- paste0("X.", 1:6)
-          } else if (method == "outcome.wo.instruments"){
-            X_treatment <- paste0("X.", 2:6)
-            X_outcome <- paste0("X.", 2:6)
-          } else if (method == "smart"){
-            X_treatment <- paste0("X.", 2:6)
-            X_outcome <- paste0("X.", 2:3)
-          } else if (method == "minimal.set"){
-            X_treatment <- paste0("X.", 2:3)
-            X_outcome <- paste0("X.", 2:3)
-          } else {
-            stop("error in subset.")
+          # choose subset
+          for (method in different_subset_tested){
+            if (method == "outcome.and.instruments"){
+              X_treatment <- paste0("X.", 1:6)
+              X_outcome <- paste0("X.", 1:6)
+            } else if (method == "outcome.wo.instruments"){
+              X_treatment <- paste0("X.", 2:6)
+              X_outcome <- paste0("X.", 2:6)
+            } else if (method == "smart"){
+              X_treatment <- paste0("X.", 2:6)
+              X_outcome <- paste0("X.", 2:3)
+            } else if (method == "minimal.set"){
+              X_treatment <- paste0("X.", 2:3)
+              X_outcome <- paste0("X.", 2:3)
+            } else {
+              stop("error in subset.")
+            }
           }
       }
      
