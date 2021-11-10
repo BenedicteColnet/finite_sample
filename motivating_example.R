@@ -100,10 +100,10 @@ for (sample.size in c(300, 1000, 3000, 9000, 30000)){
         
         results.linear <- rbind(results.linear, new.row)
         
-      }
     }
   }
 }
+
 
 results.linear$sample.size <- as.factor(results.linear$sample.size)
 
