@@ -274,8 +274,8 @@ aipw_linear <- function(covariates_names_vector_treatment,
   }
 
   # replace extreme values if necessary
-  e.hat <- replace(e.hat, e.hat < 0.01, 0.01)
-  e.hat <- replace(e.hat, e.hat > 0.99, 0.99)  
+  #e.hat <- replace(e.hat, e.hat < 0.01, 0.01)
+  #e.hat <- replace(e.hat, e.hat > 0.99, 0.99)  
     
   # Compute the summand in AIPW estimator
   W <- dataframe[, treatment_name]
