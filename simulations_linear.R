@@ -40,8 +40,8 @@ for (sample.size in c(300, 1000, 3000, 9000, 30000)){
           X_treatment <- paste0("X.", 1:50)
           X_outcome <- paste0("X.", 1:50)
         } else if (method == "part.of.outcome"){
-          X_treatment <- paste0("X.", 1:40)
-          X_outcome <- paste0("X.", 1:40)
+          X_treatment <- paste0("X.", 1:6)
+          X_outcome <- paste0("X.", 1:20)
         } else if (method == "outcome"){
           X_treatment <- paste0("X.", 1:30)
           X_outcome <- paste0("X.", 1:30)

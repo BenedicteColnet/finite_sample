@@ -61,7 +61,7 @@ generate_simulation_linear <- function(n_obs = 1000, independent_covariate = FAL
   if(independent_covariate){
     cov_mat = diag(p)
   } else {
-    cov_mat = toeplitz(0.5^(0:(p - 1)))
+    cov_mat = toeplitz(0.6^(0:(p - 1)))
   }
   
   
@@ -77,9 +77,9 @@ generate_simulation_linear <- function(n_obs = 1000, independent_covariate = FAL
   
   if(constant_cate){
     ATE = 3
-    simulation$Y_1 <- simulation$b + ATE + rnorm(n_obs)
+    simulation$Y_1 <- simulation$b + ATE + 2*rnorm(n_obs)
   } else {
-    simulation$Y_1 <- simulation$b + simulation$X.2 + simulation$X.3 + simulation$X.4 + rnorm(n_obs)
+    simulation$Y_1 <- simulation$b + simulation$X.2 + simulation$X.3 + simulation$X.4 + 2*rnorm(n_obs)
   }
   
   simulation$A <- rbinom(n_obs, size = 1, prob = simulation$e)
