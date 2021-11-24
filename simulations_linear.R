@@ -21,14 +21,14 @@ results.linear <- data.frame("sample.size" = c(),
                              "nuisance" = c())
 
 different_subset_tested <- c("all",
-                             "outcome.and.noise",
+                             "part.of.outcome",
                              "outcome",
                              "smart",
                              "minimal.set")
 
-for (sample.size in c(300, 1000, 3000, 9000, 30000, 100000)){
+for (sample.size in c(300, 1000, 3000, 9000, 30000)){
   print(paste0("Starting sample size ", sample.size))
-  for (i in 1:500){
+  for (i in 1:100){
     for (independence in c(TRUE, FALSE)){
       
       # generate a simulation
@@ -39,18 +39,18 @@ for (sample.size in c(300, 1000, 3000, 9000, 30000, 100000)){
         if (method == "all"){
           X_treatment <- paste0("X.", 1:50)
           X_outcome <- paste0("X.", 1:50)
-        } else if (method == "outcome.and.noise"){
-          X_treatment <- paste0("X.", 2:50)
-          X_outcome <- paste0("X.", 2:50)
+        } else if (method == "part.of.outcome"){
+          X_treatment <- paste0("X.", 1:40)
+          X_outcome <- paste0("X.", 1:40)
         } else if (method == "outcome"){
-          X_treatment <- paste0("X.", 2:30)
-          X_outcome <- paste0("X.", 2:30)
+          X_treatment <- paste0("X.", 1:30)
+          X_outcome <- paste0("X.", 1:30)
         } else if (method == "minimal.set"){
-          X_treatment <- paste0("X.", 2:6)
-          X_outcome <- paste0("X.", 2:6)
+          X_treatment <- paste0("X.", 1:6)
+          X_outcome <- paste0("X.", 1:6)
         } else if (method == "smart"){
-          X_treatment <- paste0("X.", 2:6)
-          X_outcome <- paste0("X.", 2:30)
+          X_treatment <- paste0("X.", 1:6)
+          X_outcome <- paste0("X.", 1:30)
         } else {
           stop("error in subset.")
         }
