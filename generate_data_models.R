@@ -61,15 +61,15 @@ generate_simulation_linear <- function(n_obs = 1000, independent_covariate = FAL
   if(independent_covariate){
     cov_mat = diag(p)
   } else {
-    cov_mat = toeplitz(0.8^(0:(p - 1)))
+    cov_mat = toeplitz(0.5^(0:(p - 1)))
   }
   
   
   X = rmvnorm(n = n_obs, mean = rep(1, p), sigma = cov_mat)
   
   # generate baseline and propensity scores
-  b = X[,2:30]%*%rep(1,29)
-  e = 1/(1 + exp(9 - X[,2] - X[,3] - X[,4] - X[,5] - X[,6]))
+  b = X[,1:30]%*%rep(1,30)
+  e = 1/(1 + exp(-4 - 0.8*(-X[,1] - X[,2] - X[,3] - X[,4] - X[,5] - X[,6])))
   
   # complete potential outcomes, treatment, and observed outcome
   simulation <- data.frame(X = X, b = b, e = e)
