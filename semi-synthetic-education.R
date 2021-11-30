@@ -32,9 +32,9 @@ results <- data_frame("estimator" = c(),
                       "sample.size" = c(),
                       "extended.set" = c())
 
-for (sample.size in c(300, 1000, 3000, 10000, 30000, 100000)){
+for (sample.size in c(300, 1000, 3000, 10000, 30000)){
   print(paste0("starting sample size ", str(sample.size)))
-  for (i in 1:20){
+  for (i in 1:30){
     if(i == 5){
       print("starting 5")
     } else if (i == 15){
