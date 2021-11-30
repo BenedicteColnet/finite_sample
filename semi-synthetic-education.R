@@ -25,14 +25,14 @@ data_depp$Private <- ifelse(data_depp$Categ_Etab_CP == "Private", 1, 0)
 
 categ <- c("REP", "REPp", "Public", "Private")
 minimal_set <- c(categ)
-extended_set <- c(minimal_set, "Age_CP", "Sexe_Num", "T1_Math", "T1_Language", "IPS_Etab_CP") #"T1_Language" "T1_Math"
+extended_set <- c(minimal_set, "Age_CP", "Sexe_Num", "IPS_Etab_CP") #"T1_Language" "T1_Math" are post-treatment covariates
 
 results <- data_frame("estimator" = c(),
                       "estimate" = c(),
                       "sample.size" = c(),
                       "extended.set" = c())
 
-for (sample.size in c(300, 1000, 3000, 10000, 30000)){
+for (sample.size in c(300, 1000, 3000, 10000, 30000, 100000)){
   print(paste0("starting sample size ", str(sample.size)))
   for (i in 1:20){
     if(i == 5){
