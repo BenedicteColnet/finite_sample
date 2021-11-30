@@ -24,8 +24,8 @@ data_depp$Public <- ifelse(data_depp$Categ_Etab_CP == "Public", 1, 0)
 data_depp$Private <- ifelse(data_depp$Categ_Etab_CP == "Private", 1, 0)
 
 categ <- c("REP", "REPp", "Public", "Private")
-minimal_set <- c(categ, "IPS_Etab_CP")
-extended_set <- c(minimal_set, "Age_CP", "Sexe_Num") #"T1_Language" "T1_Math"
+minimal_set <- c(categ)
+extended_set <- c(minimal_set, "Age_CP", "Sexe_Num", "IPS_Etab_CP", "T1_Language", "T1_Math") #"T1_Language" "T1_Math"
 
 results <- data_frame("estimator" = c(),
                       "estimate" = c(),
