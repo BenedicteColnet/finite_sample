@@ -69,4 +69,4 @@ for (sample.size in c(1000, 10000, 50000)){
 }
 
 
-write.csv(x=results.linear, file="./data/semi-synthetic-education.csv")
+write.csv(x=results, file="./data/semi-synthetic-education.csv")
