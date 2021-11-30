@@ -94,3 +94,43 @@ generate_simulation_linear <- function(n_obs = 1000, independent_covariate = FAL
   }
   
 }
+
+
+
+generate_simulation_logit_binary <- function(n_obs = 1000, independent_covariate = FALSE, all_covariates_output = FALSE){
+  
+  p = 12
+  
+  # generate multivariate gaussian vector
+  if(independent_covariate){
+    cov_mat = diag(p)
+  } else {
+    cov_mat = toeplitz(0.6^(0:(p - 1)))
+  }
+  
+  
+  X = rmvnorm(n = n_obs, mean = rep(1, p), sigma = cov_mat)
+  
+  # generate baseline and propensity scores
+  b = X[,1:12]%*%rep(1,12)
+  e = 1/(1 + exp(-4 - 0.8*(-X[,1] - X[,2] - X[,3] - X[,4])))
+  
+  # complete potential outcomes, treatment, and observed outcome
+  simulation <- data.frame(X = X, b = b, e = e)
+  simulation$prob_Y_0 <- 1/(1 + exp(simulation$b))
+  simulation$Y_0 <- rbinom(n_obs, size = 1, prob = simulation$prob_Y_0)
+  simulation$prob_Y_1 <- 1/(1 + exp(simulation$b + 4))
+  simulation$Y_1 <- rbinom(n_obs, size = 1, prob = simulation$prob_Y_1)
+  
+  simulation$A <- rbinom(n_obs, size = 1, prob = simulation$e)
+  simulation$Y <- ifelse(simulation$A == 1, simulation$Y_1, simulation$Y_0)
+  
+  
+  if(all_covariates_output){
+    return(simulation)
+  } else {
+    simulation <- simulation[, c(paste0("X.", 1:p), "A", "Y")]
+    return(simulation)
+  }
+  
+}

@@ -298,6 +298,85 @@ aipw_linear <- function(covariates_names_vector_treatment,
 }
 
 
+# Custom AIPW with logit models
+aipw_logit <- function(covariates_names_vector_treatment,
+                        covariates_names_vector_outcome,
+                        dataframe,
+                        outcome_name = "Y",
+                        treatment_name = "A",
+                        n.folds = 2){
+  
+  n_obs <- nrow(dataframe)
+  
+  # Prepare formulas
+  fmla.treatment <- formula(paste0(treatment_name,"~."))
+  fmla.outcome <- formula(paste0(outcome_name,"~."))
+  
+  # Cross-fitted estimates of E[Y|X,W=1], E[Y|X,W=0] and e(X) = P[W=1|X]
+  mu.hat.1 <- rep(NA, n_obs)
+  mu.hat.0 <- rep(NA, n_obs)
+  e.hat <- rep(NA, n_obs)
+  
+  if (n.folds > 1){
+    
+    indices <- split(seq(n_obs), sort(seq(n_obs) %% n.folds))
+    
+    for (idx in indices) {
+      
+      # Fit model on the set -idx
+      mu.1.model <- glm(fmla.outcome, 
+                       data = dataframe[-idx & dataframe[, treatment_name] == 1, c(outcome_name, covariates_names_vector_outcome)], family="binomial")
+      mu.0.model <- glm(fmla.outcome, 
+                       data = dataframe[-idx & dataframe[, treatment_name] == 0, c(outcome_name, covariates_names_vector_outcome)], family="binomial")
+      propensity.model <- glm(fmla.treatment, data = dataframe[-idx, c(treatment_name, covariates_names_vector_treatment)], family="binomial")
+      
+      # Predict with cross-fitting
+      mu.hat.1[idx] <- predict(mu.1.model, newdata = dataframe[idx, c(outcome_name, covariates_names_vector_outcome)], type="response")
+      mu.hat.0[idx] <- predict(mu.0.model, newdata = dataframe[idx, c(outcome_name, covariates_names_vector_outcome)], type="response")
+      e.hat[idx] <- predict(propensity.model, newdata = dataframe[idx,  c(treatment_name, covariates_names_vector_treatment)], type="response")
+      
+    }
+  } else if (n.folds == 0 | n.folds == 1){
+    
+    # Fit model on all observations
+    mu.1.model <- glm(fmla.outcome, 
+                     data = dataframe[dataframe[, treatment_name] == 1, c(outcome_name, covariates_names_vector_outcome)], family="binomial")
+    mu.0.model <- glm(fmla.outcome, 
+                     data = dataframe[dataframe[, treatment_name] == 0, c(outcome_name, covariates_names_vector_outcome)], family="binomial")
+    propensity.model <- glm(fmla.treatment, data = dataframe[, c(treatment_name, covariates_names_vector_treatment)], family="binomial")
+    
+    # Predict with same observations
+    mu.hat.1 <- predict(mu.1.model)
+    mu.hat.0 <- predict(mu.0.model)
+    e.hat <- predict(propensity.model)
+  } else {
+    stop("n.fold must be a positive integer")
+  }
+  
+  
+  # Compute the summand in AIPW estimator
+  W <- dataframe[, treatment_name]
+  Y <- dataframe[, outcome_name]
+  
+  ## T- learner
+  t.learner <- mean(mu.hat.1)/mean(mu.hat.0)
+  
+  ## AIPW
+  m1 <- (W / e.hat) * (Y -  mu.hat.1) + mu.hat.1 
+  m0 <- ((1-W) / (1-e.hat)) * (Y -  mu.hat.0) + mu.hat.0
+  
+  aipw <- mean(m1)/mean(m0)
+  
+  ## IPW
+  ipw = (mean(W*Y / e.hat)) / (mean((1-W)*Y/(1-e.hat)))
+  
+  res = c("ipw" = ipw, "t.learner" = t.learner, "aipw" = aipw)
+  
+  return(res)
+  
+}
+
+
 causal_forest_wrapper <- function(covariates_names_vector, 
                                   dataframe,
                                   outcome_name = "Y",
