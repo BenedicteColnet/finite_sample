@@ -24,15 +24,15 @@ data_depp$Public <- ifelse(data_depp$Categ_Etab_CP == "Public", 1, 0)
 data_depp$Private <- ifelse(data_depp$Categ_Etab_CP == "Private", 1, 0)
 
 categ <- c("REP", "REPp", "Public", "Private")
-minimal_set <- c(categ)
-extended_set <- c(minimal_set, "Age_CP", "Sexe_Num", "IPS_Etab_CP") #"T1_Language" "T1_Math"
+minimal_set <- c(categ, "IPS_Etab_CP")
+extended_set <- c(minimal_set, "Age_CP", "Sexe_Num") #"T1_Language" "T1_Math"
 
 results <- data_frame("estimator" = c(),
                       "estimate" = c(),
                       "sample.size" = c(),
                       "extended.set" = c())
 
-for (sample.size in c(3000, 10000)){
+for (sample.size in c(300, 1000, 3000, 10000)){
   print(paste0("starting sample size ", str(sample.size)))
   for (i in 1:20){
     if(i == 5){
@@ -57,7 +57,7 @@ for (sample.size in c(3000, 10000)){
                                               min.node.size.if.forest = 1)
 
   
-  new_row <- data.frame("estimator" = rep(c("ipw", "t-learner", "aipw"),2),
+    new_row <- data.frame("estimator" = rep(c("ipw", "t-learner", "aipw"),2),
                         "estimate" = c(estimate.with.minimal.set["ipw"],
                                        estimate.with.minimal.set["t.learner"],
                                        estimate.with.minimal.set["aipw"],
@@ -67,7 +67,7 @@ for (sample.size in c(3000, 10000)){
                         "sample.size" = rep(sample.size,6),
                         "extended.set" = c("no", "no", "no", "yes", "yes", "yes"))
   
-  results <- rbind(results, new_row)
+    results <- rbind(results, new_row)
   }
 }
 
