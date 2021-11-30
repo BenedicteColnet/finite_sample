@@ -9,7 +9,7 @@ source("estimators.R")
 source("generate_data_models.R")
 
 # load data
-PATH <- "~/storage/store/work/bcolnet/data/cohort_2019_imputed_after_2_composite_covariate.RData"
+PATH <- "../data/cohort_2019_imputed_after_2_composite_covariate.RData"
 load(PATH)
 
 data_depp <- data_depp[data_depp$Taille_Classe > 8,]
