@@ -23,9 +23,9 @@ data_depp$REPp <- ifelse(data_depp$Categ_Etab_CP == "REP+", 1, 0)
 data_depp$Public <- ifelse(data_depp$Categ_Etab_CP == "Public", 1, 0)
 data_depp$Private <- ifelse(data_depp$Categ_Etab_CP == "Private", 1, 0)
 
-categ <- c("REP", "REPp", "Public", "Private", "IPS_Etab_CP")
+categ <- c("REP", "REPp", "Public", "Private")
 minimal_set <- c(categ)
-extended_set <- c(minimal_set, "Age_CP", "Sexe_Num", "T1_Math") #"T1_Language" "T1_Math"
+extended_set <- c(minimal_set, "Age_CP", "Sexe_Num", "T1_Math", "T1_Language", "IPS_Etab_CP") #"T1_Language" "T1_Math"
 
 results <- data_frame("estimator" = c(),
                       "estimate" = c(),
@@ -47,14 +47,14 @@ for (sample.size in c(300, 1000, 3000, 10000, 30000)){
                                              outcome_name = "T3_Math",
                                              treatment_name = "Treatment",
                                              n.folds = 2,
-                                             min.node.size.if.forest = 1)
-    estimate.with.extended.set <- aipw_forest(covariates_names_vector_treatment = minimal_set,
+                                             min.node.size.if.forest = 3)
+    estimate.with.extended.set <- aipw_forest(covariates_names_vector_treatment = extended_set,
                                               covariates_names_vector_outcome = extended_set,
                                               dataframe = workind_df,
                                               outcome_name = "T3_Math",
                                               treatment_name = "Treatment",
                                               n.folds = 2,
-                                              min.node.size.if.forest = 1)
+                                              min.node.size.if.forest = 3)
 
   
     new_row <- data.frame("estimator" = rep(c("ipw", "t-learner", "aipw"),2),
