@@ -31,13 +31,13 @@ results <- data_frame("estimator" = c(),
                       "sample.size" = c(),
                       "extended.set" = c())
 
-for (sample.size in c(1000, 10000, 50000)){
+for (sample.size in c(3000, 10000)){
   print(paste0("starting sample size ", str(sample.size)))
-  for (i in 1:30){
-    if(i == 10){
-      print("starting 10")
-    } else if (i == 20){
-      print("starting 20")
+  for (i in 1:20){
+    if(i == 5){
+      print("starting 5")
+    } else if (i == 15){
+      print("starting 15")
     }
     workind_df <- data_depp[sample(nrow(data_depp), sample.size), ]
     estimate.with.minimal.set <- aipw_forest(covariates_names_vector_treatment = minimal_set,
@@ -45,14 +45,14 @@ for (sample.size in c(1000, 10000, 50000)){
                                              dataframe = workind_df,
                                              outcome_name = "T3_Math",
                                              treatment_name = "Treatment",
-                                             n.folds = 5,
+                                             n.folds = 2,
                                              min.node.size.if.forest = 1)
     estimate.with.extended.set <- aipw_forest(covariates_names_vector_treatment = minimal_set,
                                               covariates_names_vector_outcome = extended_set,
                                               dataframe = workind_df,
                                               outcome_name = "T3_Math",
                                               treatment_name = "Treatment",
-                                              n.folds = 5,
+                                              n.folds = 2,
                                               min.node.size.if.forest = 1)
 
   
