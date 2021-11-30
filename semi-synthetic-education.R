@@ -13,6 +13,7 @@ PATH <- "../data/cohort_2019_imputed_after_2_composite_covariate.RData"
 load(PATH)
 
 data_depp <- data_depp[data_depp$Taille_Classe > 8,]
+data_depp <- data_depp[data_depp$Taille_Classe > 12 & data_depp$Taille_Classe < 17,]
 data_depp$Treatment <- ifelse(data_depp$Taille_Classe < 13, 1, 0)
 
 # Categ etab into one hot encoder
