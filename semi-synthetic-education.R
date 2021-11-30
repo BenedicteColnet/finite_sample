@@ -53,7 +53,7 @@ for (sample.size in c(1000, 10000, 50000)){
                                               treatment_name = "Treatment",
                                               n.folds = 5,
                                               min.node.size.if.forest = 1)
-  }
+
   
   new_row <- data.frame("estimator" = rep(c("ipw", "t-learner", "aipw"),2),
                         "estimate" = c(estimate.with.minimal.set["ipw"],
@@ -66,6 +66,7 @@ for (sample.size in c(1000, 10000, 50000)){
                         "extended.set" = c("no", "no", "no", "yes", "yes", "yes"))
   
   results <- rbind(results, new_row)
+  }
 }
 
 
