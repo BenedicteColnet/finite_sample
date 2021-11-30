@@ -35,7 +35,7 @@ for (sample.size in c(1000, 10000, 50000)){
   for (i in 1:30){
     if(i == 10){
       print("starting 10")
-    } else if (i = 20){
+    } else if (i == 20){
       print("starting 20")
     }
     workind_df <- data_depp[sample(nrow(data_depp), sample.size), ]
