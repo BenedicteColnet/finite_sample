@@ -94,7 +94,6 @@ generate_simulation_linear <- function(n_obs = 1000, independent_covariate = FAL
   
 }
 
-# original simulation set-up
 complex_model <- function(n_obs = 1000,  all_covariates_output = FALSE){
   
   # generate multivariate gaussian vector for 5 covariates
@@ -112,7 +111,7 @@ complex_model <- function(n_obs = 1000,  all_covariates_output = FALSE){
   
   
   X <- data.frame( X.1, X.2, X, X_bis)
-  names(X) <- paste("X.", 1:12)
+  names(X)[1:12] <- paste0("X.", 1:12)
   
   eta = 0.1
   e = pmax(eta,as.numeric(X[,1]==0 & X[,2]==0 & X[,3]<0.6)*0.8, pmin(sin(pi * X[,1] * X[,2]), 1-eta), 1/(1 + exp(-X[,3]) + exp(-X[,4] + exp(-X[,5]))))
@@ -121,7 +120,9 @@ complex_model <- function(n_obs = 1000,  all_covariates_output = FALSE){
   tau = (X[,1] + X[,7] + X[,8] + X[,9])*3
   
   # complete potential outcomes, treatment, and observed outcome
-  simulation <- data.frame(X = X, b = b, tau = tau, e = e)
+  simulation <- X
+  oracle <- data.frame(b = b, tau = tau, e = e)
+  simulation <- cbind(simulation, oracle)
   simulation$Y_0 <- simulation$b - 0.5*simulation$tau + rnorm(n_obs, mean = 0, sd = 0.1)
   simulation$Y_1 <- simulation$b + 0.5*simulation$tau + rnorm(n_obs, mean = 0, sd = 0.1)
   simulation$A <- rbinom(n_obs, size = 1, prob = simulation$e)
