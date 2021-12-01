@@ -1,4 +1,3 @@
-
 # simulation set up according to Wager & Nie
 generate_simulation_wager_nie <- function(n = 1000, p = 12, setup = "D", all_covariates_output = FALSE){
   
@@ -47,10 +46,10 @@ generate_simulation_wager_nie <- function(n = 1000, p = 12, setup = "D", all_cov
     simulation <- simulation[, c(paste0("X.", 1:p), "A", "Y")]
     return(simulation)
   }
-  
-  
   return(simulation)
 }
+
+
 
 
 generate_simulation_linear <- function(n_obs = 1000, independent_covariate = FALSE, constant_cate = TRUE, all_covariates_output = FALSE){
@@ -95,6 +94,47 @@ generate_simulation_linear <- function(n_obs = 1000, independent_covariate = FAL
   
 }
 
+# original simulation set-up
+complex_model <- function(n_obs = 1000,  all_covariates_output = FALSE){
+  
+  # generate multivariate gaussian vector for 5 covariates
+  cov_mat = toeplitz(0.6^(0:(5 - 1)))
+  X = rmvnorm(n = n_obs, mean = rep(1, 5), sigma = cov_mat)
+  
+  # generate another vector with 5 uniform covariates
+  X_bis = matrix(runif(n_obs*5, min=0, max=1), n_obs, 5)
+  
+  # a binomal covariates
+  X.1 <- rbinom(n_obs, 1, prob = 0.2)
+  
+  # a covariates depending on one of the uniform
+  X.2 <- rbinom(n_obs, 1, prob = (0.75 * X_bis[,1] + (0.25 * (1 - X_bis[,1]))))
+  
+  
+  X <- data.frame( X.1, X.2, X, X_bis)
+  names(X) <- paste("X.", 1:12)
+  
+  eta = 0.1
+  e = pmax(eta,as.numeric(X[,1]==0 & X[,2]==0 & X[,3]<0.6)*0.8, pmin(sin(pi * X[,1] * X[,2]), 1-eta), 1/(1 + exp(-X[,3]) + exp(-X[,4] + exp(-X[,5]))))
+  
+  b = (pmax(X[,2] + X[,3] + X[,4], 0) + pmax(X[,5] + X[,6], 0)) / 2 + X[,10]*X[,11] + X[,2]*4
+  tau = (X[,1] + X[,7] + X[,8] + X[,9])*3
+  
+  # complete potential outcomes, treatment, and observed outcome
+  simulation <- data.frame(X = X, b = b, tau = tau, e = e)
+  simulation$Y_0 <- simulation$b - 0.5*simulation$tau + rnorm(n_obs, mean = 0, sd = 0.1)
+  simulation$Y_1 <- simulation$b + 0.5*simulation$tau + rnorm(n_obs, mean = 0, sd = 0.1)
+  simulation$A <- rbinom(n_obs, size = 1, prob = simulation$e)
+  simulation$Y <- ifelse(simulation$A == 1, simulation$Y_1, simulation$Y_0)
+  
+  if(all_covariates_output){
+    return(simulation)
+  } else {
+    simulation <- simulation[, c(paste0("X.", 1:12), "A", "Y")]
+    return(simulation)
+  }
+  return(simulation)
+}
 
 
 generate_simulation_logit_binary <- function(n_obs = 1000, independent_covariate = FALSE, all_covariates_output = FALSE){
