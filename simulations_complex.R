@@ -29,7 +29,7 @@ results.linear <- data.frame("sample.size" = c(),
 different_subset_tested <- c("extended",
                              "minimal.set")
 
-for (sample.size in c(3000, 50000)){
+for (sample.size in c(50000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:20){
     
