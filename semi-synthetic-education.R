@@ -48,6 +48,12 @@ for (sample.size in c(300, 1000, 3000, 10000, 30000)){
                                              treatment_name = "Treatment",
                                              n.folds = 2,
                                              min.node.size.if.forest = 3)
+    estimate.with.minimal.set.linear <- aipw_linear(covariates_names_vector_treatment = minimal_set,
+                                             covariates_names_vector_outcome = minimal_set,
+                                             dataframe = workind_df,
+                                             outcome_name = "T3_Math",
+                                             treatment_name = "Treatment",
+                                             n.folds = 2)
     estimate.with.extended.set <- aipw_forest(covariates_names_vector_treatment = minimal_set,
                                               covariates_names_vector_outcome = extended_set,
                                               dataframe = workind_df,
@@ -55,21 +61,36 @@ for (sample.size in c(300, 1000, 3000, 10000, 30000)){
                                               treatment_name = "Treatment",
                                               n.folds = 2,
                                               min.node.size.if.forest = 3)
+    estimate.with.extended.set.linear <- aipw_linear(covariates_names_vector_treatment = minimal_set,
+                                              covariates_names_vector_outcome = extended_set,
+                                              dataframe = workind_df,
+                                              outcome_name = "T3_Math",
+                                              treatment_name = "Treatment",
+                                              n.folds = 2)
 
   
-    new_row <- data.frame("estimator" = rep(c("ipw", "t-learner", "aipw"),2),
+    new_row <- data.frame("estimator" = rep(c("ipw", "t-learner", "aipw"),4),
                         "estimate" = c(estimate.with.minimal.set["ipw"],
                                        estimate.with.minimal.set["t.learner"],
                                        estimate.with.minimal.set["aipw"],
                                        estimate.with.extended.set["ipw"],
                                        estimate.with.extended.set["t.learner"],
-                                       estimate.with.extended.set["aipw"]),
-                        "sample.size" = rep(sample.size,6),
-                        "extended.set" = c("no", "no", "no", "yes", "yes", "yes"))
+                                       estimate.with.extended.set["aipw"],
+                                       estimate.with.minimal.set.linear["ipw"],
+                                       estimate.with.minimal.set.linear["t.learner"],
+                                       estimate.with.minimal.set.linear["aipw"],
+                                       estimate.with.extended.set.linear["ipw"],
+                                       estimate.with.extended.set.linear["t.learner"],
+                                       estimate.with.extended.set.linear["aipw"]),
+                        "sample.size" = rep(sample.size,12),
+                        "extended.set" = rep(c("no", "no", "no", "yes", "yes", "yes"),2),
+                        "nuisance" = c(rep("forest",6), c("linear", 6)))
   
     results <- rbind(results, new_row)
   }
 }
+
+
 
 
 write.csv(x=results, file="./data/semi-synthetic-education.csv")
