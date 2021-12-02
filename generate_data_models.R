@@ -116,8 +116,8 @@ complex_model <- function(n_obs = 1000,  all_covariates_output = FALSE){
   eta = 0.1
   e = pmax(eta, as.numeric(X[,1]==1 & X[,3]<0.2 &  X[,4] < 0.5)*0.98, pmin(sin(pi * X[,1] * X[,2]), 1-eta), 1/(1 + exp(10 - 0.3*(X[,6] + X[,5]))))
   
-  b = (pmax(X[,2] + X[,3] + X[,4], 0) + pmax(X[,5] + X[,6], 0)) / 2 + X[,10]*X[,11] + X[,2]*4 + X[,8]*X[,9]
-  tau = (10*X[,1] - X[,3] - X[,4])*3
+  b = (pmax(X[,2] + X[,3] + X[,4], 0) + pmax(X[,5] + X[,6], 0)) / 2 + X[,10]*X[,11] + X[,2]*4 + log(abs(X[,8]*X[,9])+ 0.1)
+  tau = (10*X[,1] - X[,3] - X[,4])*3 + 3*log(1 + exp(X[,3]))
   
   # complete potential outcomes, treatment, and observed outcome
   simulation <- X
