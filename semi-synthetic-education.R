@@ -13,8 +13,8 @@ PATH <- "../data/cohort_2019_imputed_after_2_composite_covariate.RData"
 load(PATH)
 
 data_depp <- data_depp[data_depp$Taille_Classe > 8,]
-data_depp <- data_depp[data_depp$Taille_Classe < 14 | data_depp$Taille_Classe > 17,]
-data_depp$Treatment <- ifelse(data_depp$Taille_Classe < 14, 1, 0)
+data_depp <- data_depp[data_depp$Taille_Classe < 13 | data_depp$Taille_Classe > 18,]
+data_depp$Treatment <- ifelse(data_depp$Taille_Classe < 13, 1, 0)
 print(nrow(data_depp))
 
 # Categ etab into one hot encoder
@@ -45,27 +45,27 @@ for (sample.size in c(300, 1000, 3000, 10000, 30000)){
     estimate.with.minimal.set <- aipw_forest(covariates_names_vector_treatment = minimal_set,
                                              covariates_names_vector_outcome = minimal_set,
                                              dataframe = workind_df,
-                                             outcome_name = "T3_Math",
+                                             outcome_name = "T3_Language",
                                              treatment_name = "Treatment",
                                              n.folds = 2,
                                              min.node.size.if.forest = 3)
     estimate.with.minimal.set.linear <- aipw_linear(covariates_names_vector_treatment = minimal_set,
                                              covariates_names_vector_outcome = minimal_set,
                                              dataframe = workind_df,
-                                             outcome_name = "T3_Math",
+                                             outcome_name = "T3_Language",
                                              treatment_name = "Treatment",
                                              n.folds = 2)
     estimate.with.extended.set <- aipw_forest(covariates_names_vector_treatment = minimal_set,
                                               covariates_names_vector_outcome = extended_set,
                                               dataframe = workind_df,
-                                              outcome_name = "T3_Math",
+                                              outcome_name = "T3_Language",
                                               treatment_name = "Treatment",
                                               n.folds = 2,
                                               min.node.size.if.forest = 3)
     estimate.with.extended.set.linear <- aipw_linear(covariates_names_vector_treatment = minimal_set,
                                               covariates_names_vector_outcome = extended_set,
                                               dataframe = workind_df,
-                                              outcome_name = "T3_Math",
+                                              outcome_name = "T3_Language",
                                               treatment_name = "Treatment",
                                               n.folds = 2)
 
@@ -90,7 +90,6 @@ for (sample.size in c(300, 1000, 3000, 10000, 30000)){
     results <- rbind(results, new_row)
   }
 }
-
 
 
 
