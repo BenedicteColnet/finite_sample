@@ -30,7 +30,8 @@ extended_set <- c(minimal_set, "Age_CP", "Sexe_Num") #"T1_Language" "T1_Math" ar
 results <- data_frame("estimator" = c(),
                       "estimate" = c(),
                       "sample.size" = c(),
-                      "extended.set" = c())
+                      "extended.set" = c(),
+                      "nuisance" = c())
 
 for (sample.size in c(300, 1000, 3000, 10000, 30000)){
   print(paste0("starting sample size ", str(sample.size)))
