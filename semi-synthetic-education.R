@@ -85,7 +85,7 @@ for (sample.size in c(300, 1000, 3000, 10000, 30000)){
                                        estimate.with.extended.set.linear["aipw"]),
                         "sample.size" = rep(sample.size,12),
                         "extended.set" = rep(c("no", "no", "no", "yes", "yes", "yes"),2),
-                        "nuisance" = c(rep("forest",6), c("linear", 6)))
+                        "nuisance" = c(rep("forest",6), rep("linear", 6)))
   
     results <- rbind(results, new_row)
   }
