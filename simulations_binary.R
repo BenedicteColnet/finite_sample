@@ -24,7 +24,7 @@ different_subset_tested <- c("outcome",
                              "smart",
                              "minimal.set")
 
-for (sample.size in c(300, 1000, 3000, 9000, 30000)){
+for (sample.size in c(300, 1000, 3000, 9000, 30000, 90000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:100){
     for (independence in c(TRUE, FALSE)){

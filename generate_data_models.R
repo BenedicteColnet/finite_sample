@@ -153,8 +153,9 @@ generate_simulation_logit_binary <- function(n_obs = 1000, independent_covariate
   X = rmvnorm(n = n_obs, mean = rep(1, p), sigma = cov_mat)
   
   # generate baseline and propensity scores
-  b = X[,1:12]%*%rep(3,12)
   e = 1/(1 + exp(-4 - 0.8*(-X[,1] - X[,2] - X[,3] - X[,4])))
+  b = X[,1:12]%*%rep(-0.1,12)
+  
   
   # complete potential outcomes, treatment, and observed outcome
   simulation <- data.frame(X = X, b = b, e = e)
