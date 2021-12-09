@@ -641,7 +641,7 @@ aipw_forest_two_fold <- function(covariates_names_vector_treatment,
                                  dataframe,
                                  outcome_name = "Y",
                                  treatment_name = "A",
-                                 min.node.size.if.forest = 1) {
+                                 min.node.size.if.forest = 5) {
   
   # cut in two the data set
   n <- nrow(dataframe)
@@ -677,6 +677,10 @@ aipw_forest_two_fold <- function(covariates_names_vector_treatment,
   W <- dataframe[idx_to_estimate, treatment_name]
   Y <- dataframe[idx_to_estimate, outcome_name]
   
+  # replace extreme values if necessary
+  e.hat <- replace(e.hat, e.hat < 0.01, 0.01)
+  e.hat <- replace(e.hat, e.hat > 0.99, 0.99) 
+  
   # compute estimates
   aipw = mean(mu.hat.1 - mu.hat.0
               + W / e.hat * (Y -  mu.hat.1)
@@ -694,7 +698,7 @@ aipw_forest_three_fold <- function(covariates_names_vector_treatment,
                                    dataframe,
                                    outcome_name = "Y",
                                    treatment_name = "A",
-                                   min.node.size.if.forest = 1) {
+                                   min.node.size.if.forest = 5) {
   
   # cut in two the data set
   n <- nrow(dataframe)
@@ -730,6 +734,10 @@ aipw_forest_three_fold <- function(covariates_names_vector_treatment,
   
   W <- dataframe[idx_to_estimate, treatment_name]
   Y <- dataframe[idx_to_estimate, outcome_name]
+  
+  # replace extreme values if necessary
+  e.hat <- replace(e.hat, e.hat < 0.01, 0.01)
+  e.hat <- replace(e.hat, e.hat > 0.99, 0.99) 
   
   # compute estimates
   aipw = mean(mu.hat.1 - mu.hat.0
