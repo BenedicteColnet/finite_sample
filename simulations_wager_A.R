@@ -30,7 +30,7 @@ different_subset_tested <- c("extended",
                              "smart",
                              "minimal")
 
-for (sample.size in c(1000, 3000, 9000, 30000, 100000)){
+for (sample.size in c(1000, 3000, 9000, 30000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:20){
     
@@ -82,17 +82,17 @@ for (sample.size in c(1000, 3000, 9000, 30000, 100000)){
         #                                      dataframe = a_simulation)
         
         
-        custom_aipw_2_forest <- aipw_forest(X_treatment, X_outcome, dataframe = a_simulation, n.folds = 2)
-        custom_aipw_2_linear <- aipw_linear(X_treatment, X_outcome, dataframe = a_simulation, n.folds = 2)
+        custom_aipw_2 <- aipw_forest_two_fold(X_treatment, X_outcome, dataframe = a_simulation)
+        custom_aipw_3 <- aipw_forest_three_fold(X_treatment, X_outcome, dataframe = a_simulation)
         
         
         new.row <- data.frame("sample.size" = rep(sample.size, 6),
-                              "estimate" = c(custom_aipw_2_forest["ipw"],
-                                             custom_aipw_2_forest["t.learner"],
-                                             custom_aipw_2_forest["aipw"],
-                                             custom_aipw_2_linear["ipw"],
-                                             custom_aipw_2_linear["t.learner"],
-                                             custom_aipw_2_linear["aipw"]),
+                              "estimate" = c(custom_aipw_2["ipw"],
+                                             custom_aipw_2["t.learner"],
+                                             custom_aipw_2["aipw"],
+                                             custom_aipw_3["ipw"],
+                                             custom_aipw_3["t.learner"],
+                                             custom_aipw_3["aipw"]),
                               "estimator" = rep(c("ipw",
                                                   "t-learner",
                                                   "aipw"),2),
@@ -100,7 +100,7 @@ for (sample.size in c(1000, 3000, 9000, 30000, 100000)){
                               "simulation" = rep("wager-A", 6),
                               "cross-fitting" = rep(2,6),
                               "independence" = rep(NA,6),
-                              "nuisance" = c("forest","forest","forest", "linear", "linear","linear"))
+                              "nuisance" = rep("forest",6))
         results.linear <- rbind(results.linear, new.row)
         
       }
@@ -109,4 +109,4 @@ for (sample.size in c(1000, 3000, 9000, 30000, 100000)){
 }
 
 
-write.csv(x=results.linear, file="./data/2021-12-02-wager-A.csv")
+write.csv(x=results.linear, file="./data/2021-12-09-wager-A-two-folds.csv")
