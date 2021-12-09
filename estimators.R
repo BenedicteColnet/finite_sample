@@ -636,5 +636,112 @@ aipw_wrapped <- function(covariates_names_vector_treatment,
 }
 
 
+aipw_forest_two_fold <- function(covariates_names_vector_treatment, 
+                                 covariates_names_vector_outcome,
+                                 dataframe,
+                                 outcome_name = "Y",
+                                 treatment_name = "A",
+                                 min.node.size.if.forest = 1) {
+  
+  # cut in two the data set
+  n <- nrow(dataframe)
+  indices <- split(seq(n), sort(seq(n) %% 2))
+  idx_to_fit <- indices[1]$`0`
+  idx_to_estimate <- indices[2]$`1`
+  
+  # Estimation
+  outcome.model.treated <- regression_forest(X = dataframe[idx_to_fit & dataframe[,treatment_name] == 1, covariates_names_vector_outcome], 
+                                             Y = dataframe[idx_to_fit & dataframe[,treatment_name] == 1, outcome_name], 
+                                             num.trees = 500, 
+                                             min.node.size = min.node.size.if.forest)
+  
+  outcome.model.control <- regression_forest(X = dataframe[idx_to_fit & dataframe[,treatment_name] == 0, covariates_names_vector_outcome], 
+                                             Y = dataframe[idx_to_fit & dataframe[,treatment_name] == 0, outcome_name], 
+                                             num.trees = 500, 
+                                             min.node.size = min.node.size.if.forest)
+  
+  
+  propensity.model <- probability_forest(dataframe[idx_to_fit, covariates_names_vector_treatment], 
+                                         as.factor(dataframe[idx_to_fit, treatment_name]), 
+                                         num.trees = 500, 
+                                         min.node.size=min.node.size.if.forest)
+  
+  # Prediction
+  mu.hat.1 <- predict(outcome.model.treated, 
+                      newdata = dataframe[idx_to_estimate, covariates_names_vector_outcome])$predictions
+  mu.hat.0 <- predict(outcome.model.control, 
+                      newdata = dataframe[idx_to_estimate,covariates_names_vector_outcome])$predictions
+  e.hat <- predict(propensity.model, 
+                   newdata = dataframe[idx_to_estimate,covariates_names_vector_treatment])$predictions[,2]
+  
+  W <- dataframe[idx_to_estimate, treatment_name]
+  Y <- dataframe[idx_to_estimate, outcome_name]
+  
+  # compute estimates
+  aipw = mean(mu.hat.1 - mu.hat.0
+              + W / e.hat * (Y -  mu.hat.1)
+              - (1 - W) / (1 - e.hat) * (Y -  mu.hat.0))
+  
+  ipw = mean(Y * (W/e.hat - (1-W)/(1-e.hat)))
+  g_formula = mean(mu.hat.1) - mean(mu.hat.0)
+  res = c("ipw" = ipw, "t.learner" = g_formula, "aipw" = aipw)
+  
+  return(res)
+}
+
+aipw_forest_three_fold <- function(covariates_names_vector_treatment, 
+                                   covariates_names_vector_outcome,
+                                   dataframe,
+                                   outcome_name = "Y",
+                                   treatment_name = "A",
+                                   min.node.size.if.forest = 1) {
+  
+  # cut in two the data set
+  n <- nrow(dataframe)
+  indices <- split(seq(n), sort(seq(n) %% 3))
+  idx_to_fit_mu <- indices[1]$`0`
+  idx_to_fit_e <- indices[2]$`1`
+  idx_to_estimate <- indices[3]$`2`
+  
+  # Estimation
+  outcome.model.treated <- regression_forest(X = dataframe[idx_to_fit_mu & dataframe[,treatment_name] == 1, covariates_names_vector_outcome], 
+                                             Y = dataframe[idx_to_fit_mu & dataframe[,treatment_name] == 1, outcome_name], 
+                                             num.trees = 500, 
+                                             min.node.size = min.node.size.if.forest)
+  
+  outcome.model.control <- regression_forest(X = dataframe[idx_to_fit_mu & dataframe[,treatment_name] == 0, covariates_names_vector_outcome], 
+                                             Y = dataframe[idx_to_fit_mu & dataframe[,treatment_name] == 0, outcome_name], 
+                                             num.trees = 500, 
+                                             min.node.size = min.node.size.if.forest)
+  
+  
+  propensity.model <- probability_forest(dataframe[idx_to_fit_e, covariates_names_vector_treatment], 
+                                         as.factor(dataframe[idx_to_fit_e, treatment_name]), 
+                                         num.trees = 500, 
+                                         min.node.size=min.node.size.if.forest)
+  
+  # Prediction
+  mu.hat.1 <- predict(outcome.model.treated, 
+                      newdata = dataframe[idx_to_estimate, covariates_names_vector_outcome])$predictions
+  mu.hat.0 <- predict(outcome.model.control, 
+                      newdata = dataframe[idx_to_estimate,covariates_names_vector_outcome])$predictions
+  e.hat <- predict(propensity.model, 
+                   newdata = dataframe[idx_to_estimate,covariates_names_vector_treatment])$predictions[,2]
+  
+  W <- dataframe[idx_to_estimate, treatment_name]
+  Y <- dataframe[idx_to_estimate, outcome_name]
+  
+  # compute estimates
+  aipw = mean(mu.hat.1 - mu.hat.0
+              + W / e.hat * (Y -  mu.hat.1)
+              - (1 - W) / (1 - e.hat) * (Y -  mu.hat.0))
+  
+  ipw = mean(Y * (W/e.hat - (1-W)/(1-e.hat)))
+  g_formula = mean(mu.hat.1) - mean(mu.hat.0)
+  res = c("ipw" = ipw, "t.learner" = g_formula, "aipw" = aipw)
+  
+  return(res)
+}
+
 
 
