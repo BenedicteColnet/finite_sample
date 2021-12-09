@@ -98,7 +98,7 @@ for (sample.size in c(1000, 3000, 9000, 30000)){
                                                   "aipw"),2),
                               "subset" = rep(method, 6),
                               "simulation" = rep("wager-A", 6),
-                              "cross-fitting" = rep(2,6),
+                              "cross-fitting" = c("2 folds", "2 folds", "2 folds", "3 folds", "3 folds", "3 folds"),
                               "independence" = rep(NA,6),
                               "nuisance" = rep("forest",6))
         results.linear <- rbind(results.linear, new.row)
