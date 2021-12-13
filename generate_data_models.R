@@ -4,7 +4,7 @@ generate_simulation_wager_nie <- function(n = 1000, p = 12, setup = "D", all_cov
   # set-ups
   if (setup == "A"){
     X = matrix(runif(n*p, min=0, max=1), n, p)
-    b = sin(pi * X[,2] * X[,3]) + 2 * (X[,4] - 0.5)^2 + 3*X[,5]^2 + 6 * X[,6] + 3*X[,4]
+    b = sin(pi * X[,2] * X[,3]) + 2 * (X[,4] - 0.5)^2 + X[,5]^2 + 0.5 * X[,6] + 3*X[,4]
     eta = 0.1
     e = pmax(eta, pmin(sin(pi * X[,1] * X[,2] * X[,3]), 1-eta))
     tau = (X[,3]*X[,4]) / 2
@@ -15,12 +15,12 @@ generate_simulation_wager_nie <- function(n = 1000, p = 12, setup = "D", all_cov
     tau = X[,2] + log(1 + exp(X[,3]))
   } else if (setup == "C") {
     X = matrix(rnorm(n * p), n, p)
-    b = 2 * log(1 + exp(X[,2] + X[,3] + X[,4]+ 5*X[,5]+ 3*X[,6]))
+    b = 2 * log(1 + exp(X[,2] + X[,3] + X[,4]+ X[,5]+ X[,6]))
     e = 1/(1 + exp(X[,1] + X[,2] + X[,3]))
     tau = rep(3, n)
   } else if (setup == "D") {
     X = matrix(rnorm(n*p), n, p)
-    b = (pmax(X[,2] + X[,3] + X[,4], 0) + pmax(X[,5] + X[,6], 0)) / 2 + 10*X[,6]
+    b = (pmax(X[,2] + X[,3] + X[,4], 0) + pmax(X[,5] + X[,6], 0)) / 2
     e = 1/(1 + exp(-X[,1]) + exp(-X[,2] + exp(-X[,3])))
     tau = pmax(X[,2] + X[,3] + X[,4], 0) - pmax(X[,5] + X[,6], 0)
   } else if (setup == "simple"){
