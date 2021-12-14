@@ -24,14 +24,14 @@ results.linear <- data.frame("sample.size" = c(),
                              "independence" = c(),
                              "nuisance" = c())
 
-different_subset_tested <- c(#"outcome.and.instruments",
-                             #"outcome.wo.instruments",
-                             "smart") #,
-                             #"minimal.set")
+different_subset_tested <- c("extended",
+                             "smart",
+                             "minimal")
 
-for (sample.size in c(1000, 3000, 9000, 30000)){
+
+for (sample.size in c(1000, 3000, 9000)){
   print(paste0("Starting sample size ", sample.size))
-  for (i in 1:30){
+  for (i in 1:100){
     for (independence in c(FALSE)){
       
       # generate a simulation
@@ -39,45 +39,38 @@ for (sample.size in c(1000, 3000, 9000, 30000)){
       
       # choose subset
       for (method in different_subset_tested){
-        if (method == "outcome.and.instruments"){
-          X_treatment <- paste0("X.", 1:10)
-          X_outcome <- paste0("X.", 1:10)
-        } else if (method == "outcome.wo.instruments"){
-          X_treatment <- paste0("X.", 4:10)
-          X_outcome <- paste0("X.", 4:10)
+        if (method == "extended"){
+          X_treatment <- paste0("X.", 1:30)
+          X_outcome <- paste0("X.", 1:30)
+        } else if (method == "minimal"){
+          X_treatment <- paste0("X.", 1:6)
+          X_outcome <- paste0("X.", 1:6)
         } else if (method == "smart"){
-          X_treatment <- paste0("X.", 4:7)
-          X_outcome <- paste0("X.", 4:10)
-        } else if (method == "minimal.set"){
-          X_treatment <- paste0("X.", 4:7)
-          X_outcome <- paste0("X.", 4:7)
+          X_treatment <- paste0("X.", 1:6)
+          X_outcome <- paste0("X.", 1:30)
         } else {
           stop("error in subset.")
         }
         
-        #custom_aipw_1 <- aipw_forest(X_treatment, X_outcome, dataframe = a_simulation, n.folds = 1, min.node.size.if.forest = 1)
-        custom_aipw_db_ml <- aipw_forest_double_ml(X_treatment, X_outcome, dataframe = a_simulation, min.node.size.if.forest = 1)
-        #linear_estimate <- aipw_linear(X_treatment, X_outcome, dataframe = a_simulation)
-        custom_aipw_2 <- aipw_forest(X_treatment, X_outcome, dataframe = a_simulation, n.folds = 3, min.node.size.if.forest = 1)
-        #custom_aipw_10 <- aipw_forest(X_treatment, X_outcome, dataframe = a_simulation, n.folds = 10, min.node.size.if.forest = 1)
+        custom_aipw_2 <- aipw_forest_two_fold(X_treatment, X_outcome, dataframe = a_simulation)
+        custom_aipw_3 <- aipw_forest_three_fold(X_treatment, X_outcome, dataframe = a_simulation)
         
         
         new.row <- data.frame("sample.size" = rep(sample.size, 6),
-                              "estimate" = c(custom_aipw_db_ml["ipw"],
-                                             custom_aipw_db_ml["t.learner"],
-                                             custom_aipw_db_ml["aipw"],
-                                             custom_aipw_2["ipw"],
+                              "estimate" = c(custom_aipw_2["ipw"],
                                              custom_aipw_2["t.learner"],
-                                             custom_aipw_2["aipw"]),
+                                             custom_aipw_2["aipw"],
+                                             custom_aipw_3["ipw"],
+                                             custom_aipw_3["t.learner"],
+                                             custom_aipw_3["aipw"]),
                               "estimator" = rep(c("ipw",
                                                   "t-learner",
                                                   "aipw"),2),
                               "subset" = rep(method, 6),
-                              "simulation" = rep("linear.constant.cate", 6),
-                              "cross-fitting" = c(3,3,3,3,3,3),
-                              "independence" = rep(independence, 6),
-                              "nuisance" = c("forest DML","forest DML","forest DML", "forest", "forest", "forest"))
-        
+                              "simulation" = rep("wager-A", 6),
+                              "cross-fitting" = c("2 folds", "2 folds", "2 folds", "3 folds", "3 folds", "3 folds"),
+                              "independence" = rep(NA,6),
+                              "nuisance" = rep("forest",6))
         results.linear <- rbind(results.linear, new.row)
         
       }
@@ -87,4 +80,4 @@ for (sample.size in c(1000, 3000, 9000, 30000)){
 
 results.linear$sample.size <- as.factor(results.linear$sample.size)
 
-write.csv(x=results.linear, file="./data/2021-11-03-linear-constant-ate-forest-nuisance-double-ml.csv")
+write.csv(x=results.linear, file="./data/test.csv")
