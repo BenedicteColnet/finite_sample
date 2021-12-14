@@ -645,9 +645,9 @@ aipw_forest_two_fold <- function(covariates_names_vector_treatment,
   
   # cut in two the data set
   n <- nrow(dataframe)
-  indices <- split(seq(n), sort(seq(n) %% 2))
-  idx_to_fit <- indices[1]$`0`
-  idx_to_estimate <- indices[2]$`1`
+  idx_to_fit <- 1:floor(n/3)
+  #idx_to_fit_e <- (floor(n/3)+1):(2*floor(n/3))
+  idx_to_estimate <- (2*floor(n/3) + 1):n
   
   # Estimation
   outcome.model.treated <- regression_forest(X = dataframe[idx_to_fit & dataframe[,treatment_name] == 1, covariates_names_vector_outcome], 
@@ -677,9 +677,9 @@ aipw_forest_two_fold <- function(covariates_names_vector_treatment,
   W <- dataframe[idx_to_estimate, treatment_name]
   Y <- dataframe[idx_to_estimate, outcome_name]
   
-  # replace extreme values if necessary
-  e.hat <- replace(e.hat, e.hat < 0.01, 0.01)
-  e.hat <- replace(e.hat, e.hat > 0.99, 0.99) 
+  # # replace extreme values if necessary
+  # e.hat <- replace(e.hat, e.hat < 0.01, 0.01)
+  # e.hat <- replace(e.hat, e.hat > 0.99, 0.99) 
   
   # compute estimates
   aipw = mean(mu.hat.1 - mu.hat.0
@@ -700,12 +700,11 @@ aipw_forest_three_fold <- function(covariates_names_vector_treatment,
                                    treatment_name = "A",
                                    min.node.size.if.forest = 1) {
   
-  # cut in two the data set
+  # cut in three the data set
   n <- nrow(dataframe)
-  indices <- split(seq(n), sort(seq(n) %% 3))
-  idx_to_fit_mu <- indices[1]$`0`
-  idx_to_fit_e <- indices[2]$`1`
-  idx_to_estimate <- indices[3]$`2`
+  idx_to_fit_mu <- 1:floor(n/3)
+  idx_to_fit_e <- (floor(n/3)+1):(2*floor(n/3))
+  idx_to_estimate <- (2*floor(n/3) + 1):n
   
   # Estimation
   outcome.model.treated <- regression_forest(X = dataframe[idx_to_fit_mu & dataframe[,treatment_name] == 1, covariates_names_vector_outcome], 
@@ -735,9 +734,9 @@ aipw_forest_three_fold <- function(covariates_names_vector_treatment,
   W <- dataframe[idx_to_estimate, treatment_name]
   Y <- dataframe[idx_to_estimate, outcome_name]
   
-  # replace extreme values if necessary
-  e.hat <- replace(e.hat, e.hat < 0.01, 0.01)
-  e.hat <- replace(e.hat, e.hat > 0.99, 0.99) 
+  # # replace extreme values if necessary
+  # e.hat <- replace(e.hat, e.hat < 0.01, 0.01)
+  # e.hat <- replace(e.hat, e.hat > 0.99, 0.99) 
   
   # compute estimates
   aipw = mean(mu.hat.1 - mu.hat.0
