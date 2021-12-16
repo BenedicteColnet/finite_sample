@@ -1,4 +1,4 @@
-generate_simulation <- function(n = 1000, p = 12, all_covariates_output = FALSE, independent_covariate = FALSE){
+generate_simulation <- function(n_obs = 1000, p = 12, all_covariates_output = FALSE, independent_covariate = FALSE){
   
   # generate multivariate gaussian vector
   if(independent_covariate){
