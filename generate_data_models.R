@@ -1,3 +1,39 @@
+generate_simulation <- function(n = 1000, p = 12, all_covariates_output = FALSE, independent_covariate = FALSE){
+  
+  # generate multivariate gaussian vector
+  if(independent_covariate){
+    cov_mat = diag(p)
+  } else {
+    cov_mat = toeplitz(0.6^(0:(p - 1)))
+  }
+  
+  X = matrix(rnorm(n*p), n, p)
+  b = 2 * log(1 + exp(X[,1] + X[,2] + X[,3] + X[,4])) + X[,6:p]%*%rep(3,p-6+1) + X[,p]*X[,p]
+  
+  e = ifelse(X[,4] > 0, 1/(1 + exp( 1 -X[,3] - X[,2])), 1/(1 + exp(-X[,1] -X[,2])))
+  
+  tau = pmax(X[,3] + X[,5], 0)
+  
+  # complete potential outcomes, treatment, and observed outcome
+  simulation <- data.frame(X = X, b = b, tau = tau, e = e)
+  simulation$mu_0 <- simulation$b - 0.5*simulation$tau 
+  simulation$mu_1 <- simulation$b + 0.5*simulation$tau 
+  simulation$Y_0 <- simulation$b - 0.5*simulation$tau + rnorm(n, mean = 0, sd = 0.1)
+  simulation$Y_1 <- simulation$b + 0.5*simulation$tau + rnorm(n, mean = 0, sd = 0.1)
+  simulation$A <- rbinom(n, size = 1, prob = simulation$e)
+  simulation$Y <- ifelse(simulation$A == 1, simulation$Y_1, simulation$Y_0)
+  
+  if(all_covariates_output){
+    return(simulation)
+  } else {
+    simulation <- simulation[, c(paste0("X.", 1:p), "A", "Y")]
+    return(simulation)
+  }
+  return(simulation)
+}
+
+
+
 # simulation set up according to Wager & Nie
 generate_simulation_wager_nie <- function(n = 1000, p = 12, setup = "D", all_covariates_output = FALSE){
   
@@ -48,8 +84,6 @@ generate_simulation_wager_nie <- function(n = 1000, p = 12, setup = "D", all_cov
   }
   return(simulation)
 }
-
-
 
 
 generate_simulation_linear <- function(n_obs = 1000, independent_covariate = FALSE, constant_cate = TRUE, all_covariates_output = FALSE){
