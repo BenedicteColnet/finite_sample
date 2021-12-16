@@ -7,7 +7,7 @@ generate_simulation <- function(n_obs = 1000, p = 12, all_covariates_output = FA
     cov_mat = toeplitz(0.6^(0:(p - 1)))
   }
   
-  X = matrix(rnorm(n*p), n, p)
+  X = matrix(rnorm(n_obs*p), n_obs, p)
   b = 2 * log(1 + exp(X[,1] + X[,2] + X[,3] + X[,4])) + X[,6:p]%*%rep(3,p-6+1) + X[,p]*X[,p]
   
   e = ifelse(X[,4] > 0, 1/(1 + exp( 1 -X[,3] - X[,2])), 1/(1 + exp(-X[,1] -X[,2])))
@@ -18,9 +18,9 @@ generate_simulation <- function(n_obs = 1000, p = 12, all_covariates_output = FA
   simulation <- data.frame(X = X, b = b, tau = tau, e = e)
   simulation$mu_0 <- simulation$b - 0.5*simulation$tau 
   simulation$mu_1 <- simulation$b + 0.5*simulation$tau 
-  simulation$Y_0 <- simulation$b - 0.5*simulation$tau + rnorm(n, mean = 0, sd = 0.1)
-  simulation$Y_1 <- simulation$b + 0.5*simulation$tau + rnorm(n, mean = 0, sd = 0.1)
-  simulation$A <- rbinom(n, size = 1, prob = simulation$e)
+  simulation$Y_0 <- simulation$b - 0.5*simulation$tau + rnorm(n_obs, mean = 0, sd = 0.1)
+  simulation$Y_1 <- simulation$b + 0.5*simulation$tau + rnorm(n_obs, mean = 0, sd = 0.1)
+  simulation$A <- rbinom(n_obs, size = 1, prob = simulation$e)
   simulation$Y <- ifelse(simulation$A == 1, simulation$Y_1, simulation$Y_0)
   
   if(all_covariates_output){
