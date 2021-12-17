@@ -51,9 +51,9 @@ generate_simulation_wager_nie <- function(n = 1000, p = 12, setup = "D", all_cov
     tau = X[,2] + log(1 + exp(X[,3]))
   } else if (setup == "C") {
     X = matrix(rnorm(n * p), n, p)
-    b = 2 * log(1 + exp(X[,2] + X[,3] + X[,4]+ X[,5]+ X[,6]))
-    e = 1/(1 + exp(X[,1] + X[,2] + X[,3]))
-    tau = rep(3, n)
+    b = 2 * log(1 + exp(X[,1] + X[,2] + X[,3])) + X[,4]^2 + log(1 + abs(X[,5])) + 3*X[,6]
+    e = 1/(1 + exp(X[,1] + X[,2]))
+    tau = rep(1, n)
   } else if (setup == "D") {
     X = matrix(rnorm(n * p), n, p)
     b = (pmax(X[,1] + X[,2] + X[,3], 0) + pmax(X[,4] + X[,5], 0)) / 2
@@ -71,8 +71,10 @@ generate_simulation_wager_nie <- function(n = 1000, p = 12, setup = "D", all_cov
   
   # complete potential outcomes, treatment, and observed outcome
   simulation <- data.frame(X = X, b = b, tau = tau, e = e)
-  simulation$Y_0 <- simulation$b - 0.5*simulation$tau + rnorm(n, mean = 0, sd = 0.1)
-  simulation$Y_1 <- simulation$b + 0.5*simulation$tau + rnorm(n, mean = 0, sd = 0.1)
+  simulation$mu_0 <- simulation$b - 0.5*simulation$tau
+  simulation$mu_1 <- simulation$b + 0.5*simulation$tau
+  simulation$Y_0 <- simulation$mu_0 + rnorm(n, mean = 0, sd = 0.1)
+  simulation$Y_1 <- simulation$mu_1 + rnorm(n, mean = 0, sd = 0.1)
   simulation$A <- rbinom(n, size = 1, prob = simulation$e)
   simulation$Y <- ifelse(simulation$A == 1, simulation$Y_1, simulation$Y_0)
   
