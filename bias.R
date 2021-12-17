@@ -46,8 +46,8 @@ for (sample.size in c(500, 1000, 1500, 2000, 4000)){
     simulation.to.estimate <- generate_simulation(n_obs = 10000, all_covariates_output = TRUE)
     mu.hat.1 <- predict(outcome.model.treated, simulation.to.estimate[, paste0("X.", 1:12)])$predictions
     bias.mu.1 <- mean(mu.hat.1-simulation.to.estimate$mu_1)
-    mu.hat.1 <- predict(outcome.model.control, simulation.to.estimate[, paste0("X.", 1:12)])$predictions
-    bias.mu.0 <- mean(mu.hat.0-simulation.to.estimate$mu_1)
+    mu.hat.0 <- predict(outcome.model.control, simulation.to.estimate[, paste0("X.", 1:12)])$predictions
+    bias.mu.0 <- mean(mu.hat.0-simulation.to.estimate$mu_0)
     e.hat <- predict(propensity.model, 
                      newdata = simulation.to.estimate[,paste0("X.", 1:4)])$predictions[,2]
     bias.e <- mean(e.hat-simulation.to.estimate$e)
