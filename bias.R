@@ -14,10 +14,11 @@ source("generate_data_models.R")
 results <- data.frame("sample.size" = c(),
                      "bias.mu.1" = c(),
                      "bias.mu.0" = c(),
-                     "bias.e" = c())
+                     "bias.e" = c(),
+                     "product" = c())
 
 
-for (sample.size in c(150, 300, 500, 1000, 2000)){
+for (sample.size in c(150, 300, 500, 1000, 2000, 5000, 10000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:30){
     # generate a simulation
@@ -36,6 +37,7 @@ for (sample.size in c(150, 300, 500, 1000, 2000)){
                                      max.depth = NULL,
                                      min.node.size = 1, 
                                      data = simulation[simulation$A == 0, c("Y", paste0("X.", 1:5))])
+    
     propensity.model <- probability_forest(simulation[, paste0("X.", 1:2)], 
                                            as.factor(simulation[, "A"]), 
                                            num.trees = 500, 
@@ -51,17 +53,18 @@ for (sample.size in c(150, 300, 500, 1000, 2000)){
     e.hat <- predict(propensity.model, 
                      newdata = simulation.to.estimate[,paste0("X.", 1:2)])$predictions[,2]
     bias.e <- mean(e.hat-simulation.to.estimate$e)
+    product <- mean( (e.hat-simulation.to.estimate$e) * (mu.hat.1-simulation.to.estimate$mu_1) )
     
     new_row <- data.frame("sample.size" = sample.size,
                           "bias.mu.1" = bias.mu.1,
                           "bias.mu.0" = bias.mu.0,
-                          "bias.e" = bias.e)
+                          "bias.e" = bias.e,
+                          "product" = product)
     
     results <- rbind(results, new_row)
     
   }
 }
-  
-
 
 write.csv(x=results, file="./data/2021-12-16-bias.csv")
+
