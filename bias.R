@@ -43,7 +43,7 @@ for (sample.size in c(150, 300, 500, 1000, 2000)){
     
     
     # prediction and estimation
-    simulation.to.estimate <- generate_simulation_wager_nie(n_obs = 10000, setup = "D", all_covariates_output = TRUE)
+    simulation.to.estimate <- generate_simulation_wager_nie(n = 10000, setup = "D", all_covariates_output = TRUE)
     mu.hat.1 <- predict(outcome.model.treated, simulation.to.estimate[, paste0("X.", 1:5)])$predictions
     bias.mu.1 <- mean(mu.hat.1-simulation.to.estimate$mu_1)
     mu.hat.0 <- predict(outcome.model.control, simulation.to.estimate[, paste0("X.", 1:5)])$predictions
