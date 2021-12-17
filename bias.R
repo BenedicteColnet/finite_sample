@@ -17,11 +17,11 @@ results <- data.frame("sample.size" = c(),
                      "bias.e" = c())
 
 
-for (sample.size in c(500, 1000, 1500, 2000, 4000)){
+for (sample.size in c(150, 300, 500, 1000, 2000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:30){
     # generate a simulation
-    simulation <- generate_simulation(n_obs = sample.size)
+    simulation <- generate_simulation_wager_nie(n = sample.size, setup = "D")
     
     # fit models
     outcome.model.treated <-  ranger(Y ~ .,  
@@ -29,27 +29,27 @@ for (sample.size in c(500, 1000, 1500, 2000, 4000)){
                                      mtry = 4,
                                      max.depth = NULL,
                                      min.node.size = 1, 
-                                     data = simulation[simulation$A == 1, c("Y", paste0("X.", 1:12))])
+                                     data = simulation[simulation$A == 1, c("Y", paste0("X.", 1:5))])
     outcome.model.control <-  ranger(Y ~ .,  
                                      num.trees = 500, 
                                      mtry = 4,
                                      max.depth = NULL,
                                      min.node.size = 1, 
-                                     data = simulation[simulation$A == 0, c("Y", paste0("X.", 1:12))])
-    propensity.model <- probability_forest(simulation[, paste0("X.", 1:4)], 
+                                     data = simulation[simulation$A == 0, c("Y", paste0("X.", 1:5))])
+    propensity.model <- probability_forest(simulation[, paste0("X.", 1:2)], 
                                            as.factor(simulation[, "A"]), 
                                            num.trees = 500, 
                                            min.node.size=1)
     
     
     # prediction and estimation
-    simulation.to.estimate <- generate_simulation(n_obs = 10000, all_covariates_output = TRUE)
-    mu.hat.1 <- predict(outcome.model.treated, simulation.to.estimate[, paste0("X.", 1:12)])$predictions
+    simulation.to.estimate <- generate_simulation_wager_nie(n_obs = 10000, setup = "D", all_covariates_output = TRUE)
+    mu.hat.1 <- predict(outcome.model.treated, simulation.to.estimate[, paste0("X.", 1:5)])$predictions
     bias.mu.1 <- mean(mu.hat.1-simulation.to.estimate$mu_1)
-    mu.hat.0 <- predict(outcome.model.control, simulation.to.estimate[, paste0("X.", 1:12)])$predictions
+    mu.hat.0 <- predict(outcome.model.control, simulation.to.estimate[, paste0("X.", 1:5)])$predictions
     bias.mu.0 <- mean(mu.hat.0-simulation.to.estimate$mu_0)
     e.hat <- predict(propensity.model, 
-                     newdata = simulation.to.estimate[,paste0("X.", 1:4)])$predictions[,2]
+                     newdata = simulation.to.estimate[,paste0("X.", 1:2)])$predictions[,2]
     bias.e <- mean(e.hat-simulation.to.estimate$e)
     
     new_row <- data.frame("sample.size" = sample.size,
