@@ -30,7 +30,7 @@ different_subset_tested <- c("extended",
                              "smart",
                              "minimal")
 
-for (sample.size in c(1000, 1500, 3000, 9000, 20000, 30000)){
+for (sample.size in c(300, 1000, 3000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:50){
     
@@ -40,65 +40,35 @@ for (sample.size in c(1000, 1500, 3000, 9000, 20000, 30000)){
     # choose subset
     for (method in different_subset_tested){
       if (method == "extended"){
-        X_treatment <- paste0("X.", 2:6)
-        X_outcome <- paste0("X.", 2:6)
+        X_treatment <- paste0("X.", 1:5)
+        X_outcome <- paste0("X.", 1:5)
       } else if (method == "smart"){
-        X_treatment <- paste0("X.", 2:6)
-        X_outcome <- paste0("X.", 2:3)
+        X_treatment <- paste0("X.", 1:5)
+        X_outcome <- paste0("X.", 1:2)
       } else if (method == "minimal"){
-        X_treatment <- paste0("X.", 2:3)
-        X_outcome <- paste0("X.", 2:3)
+        X_treatment <- paste0("X.", 1:2)
+        X_outcome <- paste0("X.", 1:2)
       } else {
         stop("error in subset.")
       }
       
       for (number_of_folds in c(5)){
         
-        #SL.o = c("SL.mean", "SL.lm", "SL.ranger", "SL.glmnet")
-        #SL.t = c("SL.glm", "SL.mean", "SL.ranger", "SL.glmnet")
+        aipw <- aipw_forest(X_treatment, X_outcome, dataframe = a_simulation,
+                            n.folds = 2,
+                            min.node.size.if.forest = 1)
         
         
-        # custom_aipw <- aipw_ML(covariates_names_vector_treatment = X_treatment, 
-        #                        covariates_names_vector_outcome = X_outcome, 
-        #                        dataframe = a_simulation, 
-        #                        n.folds = number_of_folds,
-        #                        sl_libs_outcome = SL.o,
-        #                        sl_libs_treatment = SL.t)
-        
-        # aipw.wrapper <- aipw_wrapped(covariates_names_vector_treatment = X_treatment, 
-        #                              covariates_names_vector_outcome = X_outcome, 
-        #                              dataframe = a_simulation, 
-        #                              n.folds = number_of_folds,
-        #                              sl_libs_outcome = SL.o,
-        #                              sl_libs_treatment = SL.t)
-        
-        # tmle.wrapper <- tmle_wrapper(covariates_names_vector = X_outcome, 
-        #                              dataframe = a_simulation, 
-        #                              n.folds = number_of_folds,
-        #                              sl_libs_outcome = SL.o,
-        #                              sl_libs_treatment = SL.t)
-        
-        # grf.wrapper <- causal_forest_wrapper(covariates_names_vector = X_outcome, 
-        #                                      dataframe = a_simulation)
-        
-        
-        custom_aipw_2 <- aipw_forest_two_fold(X_treatment, X_outcome, dataframe = a_simulation)
-        custom_aipw_3 <- aipw_forest_three_fold(X_treatment, X_outcome, dataframe = a_simulation)
-        
-        
-        new.row <- data.frame("sample.size" = rep(sample.size, 6),
-                              "estimate" = c(custom_aipw_2["ipw"],
-                                             custom_aipw_2["t.learner"],
-                                             custom_aipw_2["aipw"],
-                                             custom_aipw_3["ipw"],
-                                             custom_aipw_3["t.learner"],
-                                             custom_aipw_3["aipw"]),
+        new.row <- data.frame("sample.size" = rep(sample.size, 3),
+                              "estimate" = c(aipw["ipw"],
+                                             aipw["t.learner"],
+                                             aipw["aipw"]),
                               "estimator" = rep(c("ipw",
                                                   "t-learner",
-                                                  "aipw"),2),
-                              "subset" = rep(method, 6),
-                              "simulation" = rep("wager-A", 6),
-                              "cross-fitting" = c("2 folds", "2 folds", "2 folds", "3 folds", "3 folds", "3 folds"),
+                                                  "aipw"),1),
+                              "subset" = rep(method, 3),
+                              "simulation" = rep("new", 3),
+                              "cross-fitting" = rep(2, 3),
                               "independence" = rep(NA,6),
                               "nuisance" = rep("forest",6))
         results.linear <- rbind(results.linear, new.row)
@@ -108,4 +78,4 @@ for (sample.size in c(1000, 1500, 3000, 9000, 20000, 30000)){
   }
 }
 
-write.csv(x=results.linear, file="./data/2021-12-09-wager-D-two-folds.csv")
+write.csv(x=results.linear, file="./data/new.csv")
