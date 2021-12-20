@@ -43,8 +43,8 @@ for (sample.size in c(300, 1000, 2000, 5000, 10000)){
         X_treatment <- paste0("X.", 1:5)
         X_outcome <- paste0("X.", 1:5)
       } else if (method == "smart"){
-        X_treatment <- paste0("X.", 1:5)
-        X_outcome <- paste0("X.", 1:2)
+        X_treatment <- paste0("X.", 1:2)
+        X_outcome <- paste0("X.", 1:5)
       } else if (method == "minimal"){
         X_treatment <- paste0("X.", 1:2)
         X_outcome <- paste0("X.", 1:2)
