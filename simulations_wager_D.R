@@ -35,7 +35,7 @@ for (sample.size in c(300, 1000, 2000, 5000, 10000)){
   for (i in 1:50){
     
     # generate a simulation
-    a_simulation <- generate_simulation_wager_nie(n = sample.size, setup = "D")
+    a_simulation <- generate_simulation_wager_nie(n = sample.size, setup = "D.bis")
     
     # choose subset
     for (method in different_subset_tested){
@@ -84,4 +84,4 @@ for (sample.size in c(300, 1000, 2000, 5000, 10000)){
   }
 }
 
-write.csv(x=results.linear, file="./data/new.D.csv")
+write.csv(x=results.linear, file="./data/new.Dbis.csv")
