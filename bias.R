@@ -50,13 +50,11 @@ for (sample.size in c(150, 300, 500, 1000, 2000, 5000, 10000)){
       # fit models
       outcome.model.treated <-  ranger(Y ~ .,  
                                        num.trees = 500, 
-                                       mtry = 4,
                                        max.depth = NULL,
                                        min.node.size = 1, 
                                        data = simulation[simulation$A == 1, c("Y", X_outcome)])
       outcome.model.control <-  ranger(Y ~ .,  
                                        num.trees = 500, 
-                                       mtry = 4,
                                        max.depth = NULL,
                                        min.node.size = 1, 
                                        data = simulation[simulation$A == 0, c("Y", X_outcome)])
