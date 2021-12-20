@@ -30,7 +30,7 @@ different_subset_tested <- c("extended",
                              "smart",
                              "minimal")
 
-for (sample.size in c(300, 1000, 3000)){
+for (sample.size in c(300, 1000, 2000, 5000, 10000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:50){
     
@@ -58,17 +58,23 @@ for (sample.size in c(300, 1000, 3000)){
                             n.folds = 2,
                             min.node.size.if.forest = 1)
         
+        aipw_two_folds <- aipw_forest_two_fold(X_treatment, X_outcome, dataframe = a_simulation,
+                            min.node.size.if.forest = 1)
         
-        new.row <- data.frame("sample.size" = rep(sample.size, 3),
+        
+        new.row <- data.frame("sample.size" = rep(sample.size, 6),
                               "estimate" = c(aipw["ipw"],
                                              aipw["t.learner"],
-                                             aipw["aipw"]),
+                                             aipw["aipw"],
+                                             aipw_two_folds["ipw"],
+                                             aipw_two_folds["t.learner"],
+                                             aipw_two_folds["aipw"]),
                               "estimator" = rep(c("ipw",
                                                   "t-learner",
-                                                  "aipw"),1),
-                              "subset" = rep(method, 3),
-                              "simulation" = rep("new", 3),
-                              "cross-fitting" = rep(2, 3),
+                                                  "aipw"),2),
+                              "subset" = rep(method, 2),
+                              "simulation" = c(rep("cross.fitting", 3), rep("drop.fold", 3)) ,
+                              "cross-fitting" = rep(2, 6),
                               "independence" = rep(NA,6),
                               "nuisance" = rep("forest",6))
         results.linear <- rbind(results.linear, new.row)
