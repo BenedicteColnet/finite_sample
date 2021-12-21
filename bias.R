@@ -26,11 +26,12 @@ different_subset_tested <- c("extended",
                              "minimal")
 
 
-for (sample.size in c(150, 300, 500, 1000, 2000, 5000, 10000)){
+for (sample.size in c(150, 300, 500, 1000, 2000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:50){
     # generate a simulation
     simulation <- generate_simulation_wager_nie(n = sample.size, setup = "D.bis")
+    simulation.for.e <- generate_simulation_wager_nie(n = sample.size, setup = "D.bis")
     
     # choose subset
     for (method in different_subset_tested){
@@ -59,8 +60,8 @@ for (sample.size in c(150, 300, 500, 1000, 2000, 5000, 10000)){
                                        min.node.size = 1, 
                                        data = simulation[simulation$A == 0, c("Y", X_outcome)])
       
-      propensity.model <- probability_forest(simulation[, X_treatment], 
-                                             as.factor(simulation[, "A"]), 
+      propensity.model <- probability_forest(simulation.for.e[, X_treatment], 
+                                             as.factor(simulation.for.e[, "A"]), 
                                              num.trees = 500, 
                                              min.node.size=1)
       
@@ -100,5 +101,5 @@ for (sample.size in c(150, 300, 500, 1000, 2000, 5000, 10000)){
   }
 }
 
-write.csv(x=results, file="./data/2021-12-16-biasbis.csv")
+write.csv(x=results, file="./data/2021-12-16-biasbis2.csv")
 
