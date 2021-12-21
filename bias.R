@@ -30,7 +30,7 @@ for (sample.size in c(150, 300, 500, 1000, 2000, 5000, 10000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:50){
     # generate a simulation
-    simulation <- generate_simulation_wager_nie(n = sample.size, setup = "D")
+    simulation <- generate_simulation_wager_nie(n = sample.size, setup = "D.bis")
     
     # choose subset
     for (method in different_subset_tested){
@@ -100,5 +100,5 @@ for (sample.size in c(150, 300, 500, 1000, 2000, 5000, 10000)){
   }
 }
 
-write.csv(x=results, file="./data/2021-12-16-bias.csv")
+write.csv(x=results, file="./data/2021-12-16-biasbis.csv")
 
