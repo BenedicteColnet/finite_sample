@@ -30,12 +30,14 @@ different_subset_tested <- c("extended",
                              "smart",
                              "minimal")
 
-for (sample.size in c(300, 1000, 2000, 5000, 10000)){
+for (sample.size in c(300, 1000, 2000, 5000)){
   print(paste0("Starting sample size ", sample.size))
-  for (i in 1:50){
+  for (i in 1:100){
     
     # generate a simulation
-    a_simulation <- generate_simulation_wager_nie(n = sample.size, setup = "D.bis")
+    a_simulation_for_mu <- generate_simulation_wager_nie(n = sample.size, setup = "D.bis")
+    a_simulation_for_e <- generate_simulation_wager_nie(n = sample.size, setup = "D.bis")
+    a_simulation_for_estimate <- generate_simulation_wager_nie(n = sample.size, setup = "D.bis")
     
     # choose subset
     for (method in different_subset_tested){
@@ -54,29 +56,56 @@ for (sample.size in c(300, 1000, 2000, 5000, 10000)){
       
       for (number_of_folds in c(5)){
         
-        aipw <- aipw_forest(X_treatment, X_outcome, dataframe = a_simulation,
-                            n.folds = 2,
-                            min.node.size.if.forest = 1)
+        # fit models
+        outcome.model.treated <-  ranger(Y ~ .,  
+                                         num.trees = 500, 
+                                         max.depth = NULL,
+                                         min.node.size = 1, 
+                                         data = a_simulation_for_mu[a_simulation_for_mu$A == 1, c("Y", X_outcome)])
+        outcome.model.control <-  ranger(Y ~ .,  
+                                         num.trees = 500, 
+                                         max.depth = NULL,
+                                         min.node.size = 1, 
+                                         data = a_simulation_for_mu[a_simulation_for_mu$A == 0, c("Y", X_outcome)])
         
-        aipw_two_folds <- aipw_forest_two_fold(X_treatment, X_outcome, dataframe = a_simulation,
-                            min.node.size.if.forest = 1)
+        propensity.model.on.same.fold <- probability_forest(a_simulation_for_mu[, X_treatment], 
+                                               as.factor(a_simulation_for_mu[, "A"]), 
+                                               num.trees = 500, 
+                                               min.node.size=1)
+        
+        propensity.model.on.other.fold <- probability_forest(a_simulation_for_e[, X_treatment], 
+                                                            as.factor(a_simulation_for_e[, "A"]), 
+                                                            num.trees = 500, 
+                                                            min.node.size=1)
         
         
-        new.row <- data.frame("sample.size" = rep(sample.size, 6),
-                              "estimate" = c(aipw["ipw"],
-                                             aipw["t.learner"],
-                                             aipw["aipw"],
-                                             aipw_two_folds["ipw"],
-                                             aipw_two_folds["t.learner"],
-                                             aipw_two_folds["aipw"]),
-                              "estimator" = rep(c("ipw",
-                                                  "t-learner",
-                                                  "aipw"),2),
+        # prediction and estimation
+        mu.hat.1 <- predict(outcome.model.treated, a_simulation_for_estimate[, X_outcome])$predictions
+        mu.hat.0 <- predict(outcome.model.control, a_simulation_for_estimate[, X_outcome])$predictions
+        e.hat.same.fold <- predict(propensity.model.on.same.fold, 
+                                   newdata = a_simulation_for_estimate[,X_treatment])$predictions[,2]
+        e.hat.other.fold  <- predict(propensity.model.on.other.fold, 
+                                   newdata = a_simulation_for_estimate[,X_treatment])$predictions[,2]
+        
+        W <- a_simulation_for_estimate[, "A"]
+        Y <- a_simulation_for_estimate[, "Y"]
+        
+        aipw.same.fold = mean(mu.hat.1 - mu.hat.0
+                    + W / e.hat.same.fold * (Y -  mu.hat.1)
+                    - (1 - W) / (1 - e.hat.same.fold) * (Y -  mu.hat.0))
+        aipw.other.fold = mean(mu.hat.1 - mu.hat.0
+                              + W / e.hat.other.fold * (Y -  mu.hat.1)
+                              - (1 - W) / (1 - e.hat.other.fold) * (Y -  mu.hat.0))
+        
+        
+        new.row <- data.frame("sample.size" = rep(sample.size, 2),
+                              "estimate" = c(aipw.same.fold, aipw.other.fold),
+                              "estimator" = rep(c("aipw"),2),
                               "subset" = rep(method, 2),
-                              "simulation" = c(rep("cross.fitting", 3), rep("drop.fold", 3)) ,
-                              "cross-fitting" = rep(2, 6),
-                              "independence" = rep(NA,6),
-                              "nuisance" = rep("forest",6))
+                              "simulation" = c("same.fold", "other.fold") ,
+                              "cross-fitting" = rep(NA, 2),
+                              "independence" = rep(NA, 2),
+                              "nuisance" = rep("forest",2))
         results.linear <- rbind(results.linear, new.row)
         
       }
@@ -85,3 +114,4 @@ for (sample.size in c(300, 1000, 2000, 5000, 10000)){
 }
 
 write.csv(x=results.linear, file="./data/new.Dbis.csv")
+
