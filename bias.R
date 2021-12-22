@@ -26,7 +26,7 @@ different_subset_tested <- c("extended",
                              "minimal")
 
 
-for (sample.size in c(150, 300, 500, 1000, 2000)){
+for (sample.size in c(150, 300, 500, 1000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:50){
     # generate a simulation
@@ -67,7 +67,7 @@ for (sample.size in c(150, 300, 500, 1000, 2000)){
       
       
       # prediction and estimation
-      simulation.to.estimate <- generate_simulation_wager_nie(n = 10000, setup = "D", all_covariates_output = TRUE)
+      simulation.to.estimate <- generate_simulation_wager_nie(n = 10000, setup = "D.bis", all_covariates_output = TRUE)
       mu.hat.1 <- predict(outcome.model.treated, simulation.to.estimate[, X_outcome])$predictions
       bias.mu.1 <- mean(mu.hat.1-simulation.to.estimate$mu_1)
       mu.hat.0 <- predict(outcome.model.control, simulation.to.estimate[, X_outcome])$predictions
@@ -101,5 +101,5 @@ for (sample.size in c(150, 300, 500, 1000, 2000)){
   }
 }
 
-write.csv(x=results, file="./data/2021-12-16-biasbis2.csv")
+write.csv(x=results, file="./data/b.csv")
 
