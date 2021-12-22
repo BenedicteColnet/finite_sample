@@ -35,9 +35,9 @@ for (sample.size in c(50, 100, 200, 300, 500, 1000, 3000)){
   for (i in 1:30){
     
     # generate a simulation
-    a_simulation_for_mu <- generate_simulation_DML(n = sample.size)
-    a_simulation_for_e <- generate_simulation_DML(n = sample.size)
-    a_simulation_for_estimate <- generate_simulation_DML(n = sample.size)
+    a_simulation_for_mu <- simulate(n = sample.size)
+    a_simulation_for_e <- simulate(n = sample.size)
+    a_simulation_for_estimate <- simulate(n = sample.size)
     
     # choose subset
     for (method in different_subset_tested){
