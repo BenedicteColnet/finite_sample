@@ -30,26 +30,26 @@ different_subset_tested <- c("extended",
                              "smart",
                              "minimal")
 
-for (sample.size in c(50, 100, 200, 300, 500)){
+for (sample.size in c(50, 100, 200, 300, 500, 1000, 3000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:30){
     
     # generate a simulation
-    a_simulation_for_mu <- generate_simulation_wager_nie(n = sample.size, setup = "D.bis")
-    a_simulation_for_e <- generate_simulation_wager_nie(n = sample.size, setup = "D.bis")
-    a_simulation_for_estimate <- generate_simulation_wager_nie(n = sample.size, setup = "D.bis")
+    a_simulation_for_mu <- generate_simulation_DML(n = sample.size)
+    a_simulation_for_e <- generate_simulation_DML(n = sample.size)
+    a_simulation_for_estimate <- generate_simulation_DML(n = sample.size)
     
     # choose subset
     for (method in different_subset_tested){
       if (method == "extended"){
-        X_treatment <- paste0("X.", 1:5)
-        X_outcome <- paste0("X.", 1:5)
+        X_treatment <- paste0("X.", 1:30)
+        X_outcome <- paste0("X.", 1:30)
       } else if (method == "smart"){
-        X_treatment <- paste0("X.", 1:2)
-        X_outcome <- paste0("X.", 1:5)
+        X_treatment <- paste0("X.", 1:3)
+        X_outcome <- paste0("X.", 1:30)
       } else if (method == "minimal"){
-        X_treatment <- paste0("X.", 1:2)
-        X_outcome <- paste0("X.", 1:2)
+        X_treatment <- paste0("X.", 1:3)
+        X_outcome <- paste0("X.", 1:3)
       } else {
         stop("error in subset.")
       }
@@ -113,5 +113,5 @@ for (sample.size in c(50, 100, 200, 300, 500)){
   }
 }
 
-write.csv(x=results.linear, file="./data/new.Dbis.csv")
+write.csv(x=results.linear, file="./data/new.csv")
 
