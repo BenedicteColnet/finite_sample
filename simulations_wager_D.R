@@ -58,24 +58,24 @@ for (sample.size in c(50, 100, 200, 300, 500)){
         
         # fit models
         outcome.model.treated <-  ranger(Y ~ .,  
-                                         num.trees = 500, 
-                                         max.depth = NULL,
+                                         num.trees = 5000, 
+                                         max.depth = 0,
                                          min.node.size = 1, 
                                          data = a_simulation_for_mu[a_simulation_for_mu$A == 1, c("Y", X_outcome)])
         outcome.model.control <-  ranger(Y ~ .,  
-                                         num.trees = 500, 
-                                         max.depth = NULL,
+                                         num.trees = 5000, 
+                                         max.depth = 0,
                                          min.node.size = 1, 
                                          data = a_simulation_for_mu[a_simulation_for_mu$A == 0, c("Y", X_outcome)])
         
         propensity.model.on.same.fold <- probability_forest(a_simulation_for_mu[, X_treatment], 
                                                as.factor(a_simulation_for_mu[, "A"]), 
-                                               num.trees = 500, 
+                                               num.trees = 5000, 
                                                min.node.size=1)
         
         propensity.model.on.other.fold <- probability_forest(a_simulation_for_e[, X_treatment], 
                                                             as.factor(a_simulation_for_e[, "A"]), 
-                                                            num.trees = 500, 
+                                                            num.trees = 5000, 
                                                             min.node.size=1)
         
         
