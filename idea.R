@@ -83,7 +83,7 @@ for (sample.size in c(300, 1000, 2000, 5000, 10000)){
                             "term.C" = term.C,
                             "AIPW" = aipw.on.second.fold,
                             "g-formula" = mean(mu.hat.1 - mu.hat.0),
-                            "subset" = method)
+                            "subset" = "smart")
       
     results <- rbind(results, new_row)
       
