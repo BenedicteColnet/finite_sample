@@ -31,16 +31,16 @@ for (sample.size in c(100, 200, 300, 400, 500)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:15){
     # generate a simulation
-    simulation <- generate_simulation_wager_nie(n = sample.size, setup = "D.bis")
+    simulation <- generate_simulation_wager_nie(n = sample.size, setup = "C")
     
     # choose subset
     for (method in different_subset_tested){
       if (method == "extended"){
-        X_treatment <- paste0("X.", 1:7)
-        X_outcome <- paste0("X.", 1:7)
+        X_treatment <- paste0("X.", 1:6)
+        X_outcome <- paste0("X.", 1:6)
       } else if (method == "smart"){
         X_treatment <- paste0("X.", 1:2)
-        X_outcome <- paste0("X.", 1:7)
+        X_outcome <- paste0("X.", 1:6)
       } else if (method == "minimal"){
         X_treatment <- paste0("X.", 1:2)
         X_outcome <- paste0("X.", 1:2)
@@ -67,7 +67,7 @@ for (sample.size in c(100, 200, 300, 400, 500)){
       
       
       # prediction and estimation
-      simulation.to.estimate <- generate_simulation_wager_nie(n = 10000, setup = "D.bis", all_covariates_output = TRUE)
+      simulation.to.estimate <- generate_simulation_wager_nie(n = 10000, setup = "C", all_covariates_output = TRUE)
       mu.hat.1 <- predict(outcome.model.treated, simulation.to.estimate[, X_outcome])$predictions
       bias.mu.1 <- mean(mu.hat.1-simulation.to.estimate$mu_1)
       mu.hat.0 <- predict(outcome.model.control, simulation.to.estimate[, X_outcome])$predictions
