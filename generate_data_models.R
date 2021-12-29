@@ -61,9 +61,9 @@ generate_simulation_wager_nie <- function(n = 1000, p = 12, setup = "D", all_cov
     tau = pmax(X[,1] + X[,2] + X[,3], 0) - pmax(X[,4] + X[,5], 0)
   } else if (setup == "D.bis"){
     X = matrix(rnorm(n * p), n, p)
-    b = (pmax(X[,1] + X[,2] + X[,3], 0) + 3*pmax(X[,4] + X[,5], 0)) 
+    b = 10*X[,1] + (pmax(X[,1] + X[,2] + X[,3], 0) + 3*pmax(X[,4] + X[,5], 0)) + 3*X[,6]*X[,6] + 0.4*log(1+exp(X[7,]))
     e = 1/(1 + exp(-X[,1]) + exp(-X[,2]))
-    tau = pmax(X[,1] + X[,2] + X[,3], 0) - pmax(X[,4] + X[,5], 0)
+    tau = -9*X[,1] + X[,2] - pmax(X[,4] + X[,5], 0)
   } else {
     print("error in setup")
     break
@@ -88,7 +88,7 @@ generate_simulation_wager_nie <- function(n = 1000, p = 12, setup = "D", all_cov
 }
 
 
-generate_simulation_linear <- function(n_obs = 1000, independent_covariate = FALSE, constant_cate = TRUE, all_covariates_output = FALSE){
+generate_simulation_linear <- function(n_obs = 1000, independent_covariate = TRUE, constant_cate = FALSE, all_covariates_output = FALSE){
   
   p = 50
   
@@ -104,54 +104,22 @@ generate_simulation_linear <- function(n_obs = 1000, independent_covariate = FAL
   
   # generate baseline and propensity scores
   b = X[,1:30]%*%rep(1,30)
-  e = 1/(1 + exp(-4 - 0.8*(-X[,1] - X[,2] - X[,3] - X[,4] - X[,5] - X[,6])))
+  e = 1/(1 + exp(-2 - 0.8*(-X[,1] - X[,2] - X[,3] - X[,4] - X[,5] - X[,6])))
   
   # complete potential outcomes, treatment, and observed outcome
   simulation <- data.frame(X = X, b = b, e = e)
-  simulation$Y_0 <- simulation$b + rnorm(n_obs)
+  simulation$mu_0 <- simulation$b
+  simulation$Y_0 <- simulation$mu_0 + rnorm(n_obs)
   
   if(constant_cate){
     ATE = 3
-    simulation$Y_1 <- simulation$b + ATE + 2*rnorm(n_obs)
+    simulation$mu_1 <- simulation$b + ATE
   } else {
-    simulation$Y_1 <- simulation$b + simulation$X.2 + simulation$X.3 + simulation$X.4 + 2*rnorm(n_obs)
+    simulation$mu_1 <- simulation$b + simulation$X.2 + simulation$X.3 + simulation$X.4
   }
   
-  simulation$A <- rbinom(n_obs, size = 1, prob = simulation$e)
-  simulation$Y <- ifelse(simulation$A == 1, simulation$Y_1, simulation$Y_0)
+  simulation$Y_1 <- simulation$mu_1 + 2*rnorm(n_obs)
   
-  
-  if(all_covariates_output){
-    return(simulation)
-  } else {
-    simulation <- simulation[, c(paste0("X.", 1:p), "A", "Y")]
-    return(simulation)
-  }
-}
-
-simulate <- function(n_obs = 1000, independent_covariate = FALSE,  all_covariates_output = FALSE){
-  
-  p = 30
-  
-  # generate multivariate gaussian vector
-  if(independent_covariate){
-    cov_mat = diag(p)
-  } else {
-    cov_mat = toeplitz(0.6^(0:(p - 1)))
-  }
-  
-  
-  X = rmvnorm(n = n_obs, mean = rep(1, p), sigma = cov_mat)
-  
-  # generate baseline and propensity scores
-  b = X[,1:30]%*%rep(1,30) + 5*X[,2]*X[,3] + 0.8*exp(X[,2])/(1+exp(X[,2])) + X[,7]*X[,7]
-  e = 1/(1 + exp(-2 - 0.3*(-X[,1] - X[,2] - X[,3])))
-  
-  # complete potential outcomes, treatment, and observed outcome
-  simulation <- data.frame(X = X, b = b, e = e)
-  simulation$Y_0 <- simulation$b + rnorm(n_obs)
-  ATE = 5
-  simulation$Y_1 <- simulation$b + ATE + 2*rnorm(n_obs)
   simulation$A <- rbinom(n_obs, size = 1, prob = simulation$e)
   simulation$Y <- ifelse(simulation$A == 1, simulation$Y_1, simulation$Y_0)
   
