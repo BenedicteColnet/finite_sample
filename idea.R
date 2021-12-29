@@ -48,7 +48,7 @@ for (sample.size in c(300, 1000, 2000, 5000, 10000)){
                                        min.node.size = 1, 
                                        data = simulation[simulation$A == 0, c("Y", X.extend)])
       
-    propensity.model <- probability_forest(simulation[, X_treatment], 
+    propensity.model <- probability_forest(simulation[, X.min], 
                                              as.factor(simulation[, "A"]), 
                                              num.trees = 500, 
                                              min.node.size=1)
@@ -56,12 +56,12 @@ for (sample.size in c(300, 1000, 2000, 5000, 10000)){
       
     # prediction and estimation
     simulation.to.estimate <- generate_simulation_wager_nie(n = 10000, setup = "A", all_covariates_output = TRUE)
-    mu.hat.1 <- predict(outcome.model.treated, simulation.to.estimate[, X_outcome])$predictions
+    mu.hat.1 <- predict(outcome.model.treated, simulation.to.estimate[, X.extend])$predictions
     bias.mu.1 <- mean(mu.hat.1-simulation.to.estimate$mu_1)
-    mu.hat.0 <- predict(outcome.model.control, simulation.to.estimate[, X_outcome])$predictions
+    mu.hat.0 <- predict(outcome.model.control, simulation.to.estimate[, X.extend])$predictions
     bias.mu.0 <- mean(mu.hat.0-simulation.to.estimate$mu_0)
     e.hat <- predict(propensity.model, 
-                       newdata = simulation.to.estimate[,X_treatment])$predictions[,2]
+                       newdata = simulation.to.estimate[,X.min])$predictions[,2]
     bias.e <- mean(1/e.hat-1/simulation.to.estimate$e)
       
     term.A <- mean( (simulation.to.estimate$mu_1 - mu.hat.1) * (1 - (simulation.to.estimate$A /simulation.to.estimate$e))  ) 
