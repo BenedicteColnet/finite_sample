@@ -27,9 +27,9 @@ different_subset_tested <- c("extended",
                              "minimal")
 
 
-for (sample.size in c(100, 200, 300, 400, 500)){
+for (sample.size in c(100, 200, 300, 400, 500, 10000)){
   print(paste0("Starting sample size ", sample.size))
-  for (i in 1:15){
+  for (i in 1:30){
     # generate a simulation
     simulation <- generate_simulation_wager_nie(n = sample.size, setup = "C")
     
@@ -67,7 +67,7 @@ for (sample.size in c(100, 200, 300, 400, 500)){
       
       
       # prediction and estimation
-      simulation.to.estimate <- generate_simulation_wager_nie(n = 10000, setup = "C", all_covariates_output = TRUE)
+      simulation.to.estimate <- generate_simulation_wager_nie(n = 1000, setup = "C", all_covariates_output = TRUE)
       mu.hat.1 <- predict(outcome.model.treated, simulation.to.estimate[, X_outcome])$predictions
       bias.mu.1 <- mean(mu.hat.1-simulation.to.estimate$mu_1)
       mu.hat.0 <- predict(outcome.model.control, simulation.to.estimate[, X_outcome])$predictions
