@@ -81,9 +81,9 @@ aipw_forest <- function(covariates_names_vector_treatment,
   }
   
   
-  # replace extreme values if necessary
-  e.hat <- replace(e.hat, e.hat < 0.01, 0.01)
-  e.hat <- replace(e.hat, e.hat > 0.99, 0.99)
+  # # replace extreme values if necessary
+  # e.hat <- replace(e.hat, e.hat < 0.01, 0.01)
+  # e.hat <- replace(e.hat, e.hat > 0.99, 0.99)
   
   # compute estimates
   aipw = mean(mu.hat.1 - mu.hat.0
