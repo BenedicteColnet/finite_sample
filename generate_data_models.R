@@ -40,10 +40,10 @@ generate_simulation_wager_nie <- function(n = 1000, p = 12, setup = "D", all_cov
   # set-ups
   if (setup == "A"){
     X = matrix(runif(n*p, min=0, max=1), n, p)
-    b = sin(pi * X[,2] * X[,3]) + 2 * (X[,4] - 0.5)^2 + X[,5]^2 + 3 * X[,6] + 3*X[,4]
+    b = sin(pi * X[,1] * X[,2]) + 2 * (X[,3] - 0.5)^2 + X[,4] + 0.5 * X[,5] + 2 * X[,6]
     eta = 0.1
-    e = pmax(eta, pmin(sin(pi * X[,2] * X[,3]), 1-eta))
-    tau = (X[,3]*X[,4]) / 2
+    e = pmax(eta, pmin(sin(pi * X[,1] * X[,2]), 1-eta))
+    tau = (X[,1] + X[,2]) / 2
   } else if (setup == "B"){
     X = matrix(rnorm(n * p), n, p)
     b = pmax(0, X[,2] + X[,3], X[,4]) + pmax(0, X[,5] + X[,6])
@@ -51,19 +51,14 @@ generate_simulation_wager_nie <- function(n = 1000, p = 12, setup = "D", all_cov
     tau = X[,2] + log(1 + exp(X[,3]))
   } else if (setup == "C") {
     X = matrix(rnorm(n * p), n, p)
-    b = 2 * log(1 + exp(X[,1] + X[,2] + X[,3])) + 10*X[,4]^2 + log(1 + abs(X[,5])) + 5*X[,6] + 3*X[,5]*X[,5]
-    e = 1/(1 + exp(X[,1] + X[,2]))
-    tau = X[,2] + log(1 + exp(X[,3]))
+    b = 2 * log(1 + exp(X[,1] + X[,2] + X[,3])) + X[,4] + 0.5 * X[,5] + 2 * X[,6] 
+    e = 1/(1 + exp(X[,2] + X[,3]))
+    tau = rep(1, n)
   } else if (setup == "D") {
-    X = matrix(rnorm(n * p), n, p)
-    b = (pmax(X[,1] + X[,2] + X[,3], 0) + pmax(X[,4] + X[,5], 0)) / 2
+    X = matrix(rnorm(n*p), n, p)
+    b = (pmax(X[,1] + X[,2] + X[,3], 0) + pmax(X[,4] + X[,5], 0)) / 2 + X[,4] + 0.5 * X[,5] + 2 * X[,6]
     e = 1/(1 + exp(-X[,1]) + exp(-X[,2]))
     tau = pmax(X[,1] + X[,2] + X[,3], 0) - pmax(X[,4] + X[,5], 0)
-  } else if (setup == "other"){
-    X = matrix(rnorm(n * p), n, p)
-    b = 10*X[,1] + 0.4*log(1+exp(X[,2])) + ifelse(X[,2] > 0, 5, -5*X[,1]) + 3*(X[,3] + X[,4] + X[,5]) + 0.4*log(1+exp(X[,7] + X[,6]))
-    e = pmax( pmin(1/(1 + exp(-0.3-0.9*X[,1] +0.2*X[,2])), 0.9), 0.1)
-    tau = -3*X[,1] - log(1+exp(X[,2])) + 3*pmax(X[,4], X[,6])
   } else {
     print("error in setup")
     break
