@@ -40,10 +40,10 @@ generate_simulation_wager_nie <- function(n = 1000, p = 12, setup = "D", all_cov
   # set-ups
   if (setup == "A"){
     X = matrix(runif(n*p, min=0, max=1), n, p)
-    b = sin(pi * X[,1] * X[,2]) + 2 * (X[,3] - 0.5)^2 
-      + ifelse(X[,4] > 0, 3, -3) 
-        + ifelse(X[,5] > 0 & X[,6] < 0, 10, 20)
-          + pmax(X[,6], 1)
+    b = sin(pi * X[,1] * X[,2]) + 4 * (X[,3] - 0.5)^2 
+    + ifelse(X[,4] > 0, 3, -3) 
+    + ifelse(X[,5] > 0 & X[,6] < 0, 10, 20)
+    + 3*pmax(X[,6], 1)
     eta = 0.1
     e = pmax(eta, pmin(sin(pi * X[,1] * X[,2]), 1-eta))
     tau = (X[,1] + X[,2]) / 2
