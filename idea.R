@@ -27,11 +27,11 @@ different_subset_tested <- c("extended",
                              "minimal")
 
 
-for (sample.size in c(300, 1000, 2000, 5000, 10000, 20000, 50000)){
+for (sample.size in c(300, 400, 500, 600, 700)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:30){
     # generate a simulation
-    simulation <- generate_simulation_wager_nie(n = sample.size, setup = "A")
+    simulation <- generate_simulation_wager_nie(n = sample.size, setup = "C")
     
     # choose subset
     for (method in different_subset_tested){
@@ -39,11 +39,11 @@ for (sample.size in c(300, 1000, 2000, 5000, 10000, 20000, 50000)){
         X_treatment <- paste0("X.", 2:6)
         X_outcome <- paste0("X.", 2:6)
       } else if (method == "smart"){
-        X_treatment <- paste0("X.", 2:3)
+        X_treatment <- paste0("X.", 1:2)
         X_outcome <- paste0("X.", 2:6)
       } else if (method == "minimal"){
-        X_treatment <- paste0("X.", 2:3)
-        X_outcome <- paste0("X.", 2:3)
+        X_treatment <- paste0("X.", 1:2)
+        X_outcome <- paste0("X.", 1:2)
       } else {
         stop("error in subset.")
       }
@@ -67,7 +67,7 @@ for (sample.size in c(300, 1000, 2000, 5000, 10000, 20000, 50000)){
       
       
       # prediction and estimation
-      simulation.to.estimate <- generate_simulation_wager_nie(n = 10000, setup = "A", all_covariates_output = TRUE)
+      simulation.to.estimate <- generate_simulation_wager_nie(n = 10000, setup = "C", all_covariates_output = TRUE)
       mu.hat.1 <- predict(outcome.model.treated, simulation.to.estimate[, X_outcome])$predictions
       bias.mu.1 <- mean(mu.hat.1-simulation.to.estimate$mu_1)
       mu.hat.0 <- predict(outcome.model.control, simulation.to.estimate[, X_outcome])$predictions
