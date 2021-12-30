@@ -30,7 +30,7 @@ different_subset_tested <- c("extended",
                              "smart",
                              "minimal")
 
-for (sample.size in c(200, 400, 800, 1600)){
+for (sample.size in seq(100:10100, by = 1000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:30){
     
@@ -52,7 +52,7 @@ for (sample.size in c(200, 400, 800, 1600)){
         stop("error in subset.")
       }
       
-      for (number_of_folds in c(5)){
+      for (number_of_folds in c(2)){
 
         custom_aipw <- aipw_forest(X_treatment, 
                                      X_outcome, 
