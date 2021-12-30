@@ -30,9 +30,9 @@ different_subset_tested <- c("extended",
                              "smart",
                              "minimal")
 
-for (sample.size in c(100, 200, 400, 5000)){
+for (sample.size in c(100000)){
   print(paste0("Starting sample size ", sample.size))
-  for (i in 1:30){
+  for (i in 1:15){
     
     # generate a simulation
     a_simulation <- generate_simulation_wager_nie(n = sample.size, setup = "A")
