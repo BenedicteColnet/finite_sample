@@ -27,7 +27,7 @@ different_subset_tested <- c("extended",
                              "minimal")
 
 
-for (sample.size in c(300, 400, 500, 600, 700)){
+for (sample.size in c(500, 50000, 10000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:30){
     # generate a simulation
