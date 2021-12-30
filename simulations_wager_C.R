@@ -30,9 +30,9 @@ different_subset_tested <- c("extended",
                              "smart",
                              "minimal")
 
-for (sample.size in c(300, 1000, 3000)){
+for (sample.size in c(200, 400, 800, 1600)){
   print(paste0("Starting sample size ", sample.size))
-  for (i in 1:50){
+  for (i in 1:30){
     
     # generate a simulation
     a_simulation <- generate_simulation_wager_nie(n = sample.size, setup = "C")
@@ -40,10 +40,10 @@ for (sample.size in c(300, 1000, 3000)){
     # choose subset
     for (method in different_subset_tested){
       if (method == "extended"){
-        X_treatment <- paste0("X.", 1:5)
-        X_outcome <- paste0("X.", 1:5)
+        X_treatment <- paste0("X.", 1:6)
+        X_outcome <- paste0("X.", 1:6)
       } else if (method == "smart"){
-        X_treatment <- paste0("X.", 1:5)
+        X_treatment <- paste0("X.", 1:6)
         X_outcome <- paste0("X.", 1:2)
       } else if (method == "minimal"){
         X_treatment <- paste0("X.", 1:2)
@@ -54,23 +54,24 @@ for (sample.size in c(300, 1000, 3000)){
       
       for (number_of_folds in c(5)){
         
-        aipw <- aipw_forest(X_treatment, X_outcome, dataframe = a_simulation,
-                            n.folds = 2,
-                            min.node.size.if.forest = 1)
-        
+        custom_aipw <- aipw_forest(X_treatment, 
+                                   X_outcome, 
+                                   dataframe = a_simulation,
+                                   min.node.size.if.forest = 1,
+                                   n.folds = number_of_folds)
         
         new.row <- data.frame("sample.size" = rep(sample.size, 3),
-                              "estimate" = c(aipw["ipw"],
-                                             aipw["t.learner"],
-                                             aipw["aipw"]),
+                              "estimate" = c(custom_aipw["ipw"],
+                                             custom_aipw["t.learner"],
+                                             custom_aipw["aipw"]),
                               "estimator" = rep(c("ipw",
                                                   "t-learner",
                                                   "aipw"),1),
                               "subset" = rep(method, 3),
-                              "simulation" = rep("new", 3),
-                              "cross-fitting" = rep(2, 3),
-                              "independence" = rep(NA,6),
-                              "nuisance" = rep("forest",6))
+                              "simulation" = rep("A", 3),
+                              "cross-fitting" = rep(number_of_folds, 3),
+                              "independence" = rep(NA,3),
+                              "nuisance" = rep("forest",3))
         results.linear <- rbind(results.linear, new.row)
         
       }
@@ -78,4 +79,4 @@ for (sample.size in c(300, 1000, 3000)){
   }
 }
 
-write.csv(x=results.linear, file="./data/new.C.csv")
+write.csv(x=results.linear, file="./data/C.csv")
