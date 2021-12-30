@@ -59,11 +59,11 @@ generate_simulation_wager_nie <- function(n = 1000, p = 12, setup = "D", all_cov
     b = (pmax(X[,1] + X[,2] + X[,3], 0) + pmax(X[,4] + X[,5], 0)) / 2
     e = 1/(1 + exp(-X[,1]) + exp(-X[,2]))
     tau = pmax(X[,1] + X[,2] + X[,3], 0) - pmax(X[,4] + X[,5], 0)
-  } else if (setup == "D.bis"){
+  } else if (setup == "other"){
     X = matrix(rnorm(n * p), n, p)
-    b = 10*X[,1] + (pmax(X[,1] + X[,2] + X[,3], 0) + 3*pmax(X[,4] + X[,5], 0)) + 3*X[,6]*X[,6] + 0.4*log(1+exp(X[7,]))
-    e = 1/(1 + exp(-X[,1]) + exp(-X[,2]))
-    tau = -9*X[,1] + X[,2] - pmax(X[,4] + X[,5], 0)
+    b = 10*X[,1] + 0.4*log(1+exp(X[,2])) + ifelse(X[,2] > 0, 5, -5*X[,1]) + 3*(X[,3] + X[,4] + X[,5]) + 0.4*log(1+exp(X[,7] + X[,6]))
+    e = pmax( pmin(1/(1 + exp(-0.3-0.9*X[,1] +0.2*X[,2])), 0.9), 0.1)
+    tau = -3*X[,1] - log(1+exp(X[,2])) + 3*pmax(X[,4], X[,6])
   } else {
     print("error in setup")
     break
@@ -86,7 +86,6 @@ generate_simulation_wager_nie <- function(n = 1000, p = 12, setup = "D", all_cov
   }
   return(simulation)
 }
-
 
 generate_simulation_linear <- function(n_obs = 1000, independent_covariate = TRUE, constant_cate = FALSE, all_covariates_output = FALSE){
   
