@@ -30,7 +30,7 @@ different_subset_tested <- c("extended",
                              "smart",
                              "minimal")
 
-for (sample.size in seq(100:10100, by = 1000)){
+for (sample.size in seq(100, 10100, by = 1000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:30){
     
