@@ -51,7 +51,7 @@ generate_simulation_wager_nie <- function(n = 1000, p = 12, setup = "D", all_cov
     tau = X[,2] + log(1 + exp(X[,3]))
   } else if (setup == "C") {
     X = matrix(rnorm(n * p), n, p)
-    b = 2 * log(1 + exp(X[,1] + X[,2])) + X[,4] + 0.5 * X[,5] + 2 * X[,6] 
+    b = 2 * log(1 + exp(X[,1])) + 3* X[,1] * X[,2] +  X[,4] + 0.5 * X[,5] + 2 * X[,6] 
     e = 1/(1 + exp(X[,1] + X[,2]))
     tau = rep(1, n)
   } else if (setup == "D") {
