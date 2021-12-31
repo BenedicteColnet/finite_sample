@@ -23,19 +23,24 @@ results.linear <- data.frame("sample.size" = c(),
                              "subset" = c(),
                              "simulation" = c(),
                              "cross-fitting" = c(),
-                             "independence" = c(),
-                             "nuisance" = c())
+                             "nuisance" = c(),
+                             "term.A" = c(), 
+                             "term.B" = c(), 
+                             "term.C" = c(),
+                             "term.D" = c(), 
+                             "term.E" = c(), 
+                             "term.F" = c())
 
 different_subset_tested <- c("extended",
                              "smart",
                              "minimal")
 
-for (sample.size in seq(100, 10100, by = 1000)){
+for (sample.size in seq(500, 50000, by = 500)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:30){
     
     # generate a simulation
-    a_simulation <- generate_simulation_wager_nie(n = sample.size, setup = "D")
+    a_simulation <- generate_simulation_wager_nie(n = sample.size, setup = "D", all_covariates_output = TRUE)
     
     # choose subset
     for (method in different_subset_tested){
@@ -58,7 +63,8 @@ for (sample.size in seq(100, 10100, by = 1000)){
                                    X_outcome, 
                                    dataframe = a_simulation,
                                    min.node.size.if.forest = 1,
-                                   n.folds = number_of_folds)
+                                   n.folds = number_of_folds,
+                                   return.decomposition = TRUE)
         
         new.row <- data.frame("sample.size" = rep(sample.size, 3),
                               "estimate" = c(custom_aipw["ipw"],
@@ -68,10 +74,15 @@ for (sample.size in seq(100, 10100, by = 1000)){
                                                   "t-learner",
                                                   "aipw"),1),
                               "subset" = rep(method, 3),
-                              "simulation" = rep("A", 3),
+                              "simulation" = rep("D", 3),
                               "cross-fitting" = rep(number_of_folds, 3),
-                              "independence" = rep(NA,3),
-                              "nuisance" = rep("forest",3))
+                              "nuisance" = rep("forest",3),
+                              "term.A" = rep(custom_aipw["term.A"], 3), 
+                              "term.B" = rep(custom_aipw["term.B"], 3), 
+                              "term.C" = rep(custom_aipw["term.C"], 3),
+                              "term.D" = rep(custom_aipw["term.D"], 3), 
+                              "term.E" = rep(custom_aipw["term.E"], 3), 
+                              "term.F" = rep(custom_aipw["term.F"], 3))
         results.linear <- rbind(results.linear, new.row)
         
       }
