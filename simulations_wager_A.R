@@ -63,7 +63,8 @@ for (sample.size in c(100, 500, 1000)){
                                      X_outcome, 
                                      dataframe = a_simulation,
                                      min.node.size.if.forest = 1,
-                                     n.folds = number_of_folds)
+                                     n.folds = number_of_folds,
+                                     return.decomposition = TRUE)
         
         new.row <- data.frame("sample.size" = rep(sample.size, 3),
                               "estimate" = c(custom_aipw["ipw"],
