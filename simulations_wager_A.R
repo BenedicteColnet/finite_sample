@@ -23,8 +23,13 @@ results.linear <- data.frame("sample.size" = c(),
                              "subset" = c(),
                              "simulation" = c(),
                              "cross-fitting" = c(),
-                             "independence" = c(),
-                             "nuisance" = c())
+                             "nuisance" = c(),
+                             "term.A" = c(), 
+                             "term.B" = c(), 
+                             "term.C" = c(),
+                             "term.D" = c(), 
+                             "term.E" = c(), 
+                             "term.F" = c())
 
 different_subset_tested <- c("extended",
                              "smart",
@@ -32,10 +37,10 @@ different_subset_tested <- c("extended",
 
 for (sample.size in c(100, 500, 1000)){
   print(paste0("Starting sample size ", sample.size))
-  for (i in 1:15){
+  for (i in 1:30){
     
     # generate a simulation
-    a_simulation <- generate_simulation_wager_nie(n = sample.size, setup = "A")
+    a_simulation <- generate_simulation_wager_nie(n = sample.size, setup = "A", all_covariates_output = TRUE)
     
     # choose subset
     for (method in different_subset_tested){
@@ -70,8 +75,13 @@ for (sample.size in c(100, 500, 1000)){
                               "subset" = rep(method, 3),
                               "simulation" = rep("A", 3),
                               "cross-fitting" = rep(number_of_folds, 3),
-                              "independence" = rep(NA,3),
-                              "nuisance" = rep("forest",3))
+                              "nuisance" = rep("forest",3),
+                              "term.A" = rep(custom_aipw["term.A"], 3), 
+                              "term.B" = rep(custom_aipw["term.B"], 3), 
+                              "term.C" = rep(custom_aipw["term.C"], 3),
+                              "term.D" = rep(custom_aipw["term.D"], 3), 
+                              "term.E" = rep(custom_aipw["term.E"], 3), 
+                              "term.F" = rep(custom_aipw["term.F"], 3))
         results.linear <- rbind(results.linear, new.row)
         
       }
