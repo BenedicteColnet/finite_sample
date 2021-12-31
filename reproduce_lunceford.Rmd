@@ -89,6 +89,12 @@ simulation <- generate_lunceford(n = 5000, return_oracles = TRUE)
 ggplot(simulation, aes(x = e)) +
   geom_histogram()
 ```
+```{r}
+# Naive ATE
+big.simulation <- generate_lunceford(n = 50000, return_oracles = FALSE)
+Naive.ATE <- mean(big.simulation[big.simulation$A == 1, "Y"]) -  mean(big.simulation[big.simulation$A == 0, "Y"])
+Naive.ATE
+```
 
 
 
@@ -166,13 +172,13 @@ ggplot(comparison.estimators, aes(x = method, y = estimate, fill = method)) +
   theme_minimal() +
   xlab("") +
   ylab("ATE") +
-  geom_hline(yintercept = 2, linetype = "dashed", color = "magenta", alpha = 0.8) +
+  geom_hline(yintercept = 2, linetype = "dashed", color = "red", alpha = 0.8, size = 0.8) +
   theme(legend.title = element_blank(), legend.position = "bottom", 
           legend.box = "horizontal", legend.text = element_text(size=10)) +
-  theme(axis.text = element_text(size=12),
-           axis.title.x = element_text(size=10)) +
+  theme(axis.text = element_text(size=13, face = "bold"),
+           axis.title.x = element_text(size=14, face = "bold")) +
   scale_fill_brewer(palette = "Accent") +
   coord_flip()
-ggsave("./fig/lunceford.pdf", width = 8, height = 5)
+ggsave("./fig/lunceford.pdf", width = 5, height = 4)
 ```
 
