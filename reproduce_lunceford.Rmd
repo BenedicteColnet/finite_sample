@@ -1,0 +1,178 @@
+---
+title: "Reproducing Lunceford's simulations"
+author:
+  - Bénédicte Colnet [Inria, Paris-Saclay]
+date: "December 2021"
+output:
+  html_document:
+    code_folding: "hide"
+    number_sections: no
+    toc: yes
+    toc_depth: 2
+  pdf_document:
+    toc: yes
+abstract: | 
+  Theoretical results illustrated here are given by "Stratification and weighting via the propensity score in estimation of causal treatment effects: a comparative study" from Lunceford & Davidian in 2004, and the code is inpired from the *geex* library from Bradley Saul. 
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+set.seed(123)
+
+# libraries
+library(MASS)
+library(ggplot2)
+library(dplyr) # case_when and others
+library(geex)
+library(mvtnorm)
+library(wesanderson) # colors
+```
+
+Lunceford & Davidian shows that:
+
+- The asymptotic variance of the oracle IPW is smaller than the IPW estimator when propensity scores are estimated with the data (assuming a known parametric model for the weights),
+- Asymptotic variance of the double-robust is smaller than IPW,
+- Asymptotic varianc of the double-robust estimator is smaller when including outcome-related covariates $V$ in the nuisance models.
+
+We illustrate this counter-intuitive theoretical result with simulations following their.
+
+
+```{r}
+generate_lunceford <- function(n = 1000,  return_oracles = FALSE) {
+
+  # parameters from the paper (hard coded)
+  xi = c(-1, 1, 1)
+  nu = c(0, -1, 1, -1, 2)
+  beta = c(0, 0.6, -0.6, 0.6)
+  tau_0 <- c(-1, -1, 1, 1)
+  tau_1 <- tau_0 * -1
+  Sigma_X3 <- matrix(c(1, 0.5, -0.5, -0.5, 
+                       0.5, 1, -0.5, -0.5,
+                       -0.5, -0.5, 1, 0.5, 
+                       -0.5, -0.5, 0.5, 1), ncol = 4, byrow = TRUE)
+  
+  # beginning of simulations
+  X.3 <- rbinom(n, 1, prob = 0.2)
+  V.3 <- rbinom(n, 1, prob = (0.75 * X.3 + (0.25 * (1 - X.3))))
+  hold <- rmvnorm(n,  mean = rep(0, 4), Sigma_X3)
+  colnames(hold) <- c("X.1", "V.1", "X.2", "V.2")
+  hold <- cbind(hold, X.3, V.3)
+  hold <- apply(hold, 1, function(x){
+    x[1:4] <- x[1:4] + tau_1^(x[5])*tau_0^(1 - x[5])
+    x})
+  hold <- t(hold)[, c("X.1", "X.2", "X.3", "V.1", "V.2", "V.3")]
+  X <- cbind(Int = 1, hold)
+  e <- plogis(X[, 1:4] %*% beta)
+  A <- rbinom(n, 1, prob = e)
+  X <- cbind(X[, 1:4], A, X[, 5:7])
+  
+  if(!return_oracles){
+    return(data.frame(X[ , -1], Y = X %*% c(nu, xi) + rnorm(n)))
+  } else {
+    return(data.frame(X[ , -1], Y = X %*% c(nu, xi) + rnorm(n), e = e))
+  }
+}
+
+
+oracle_ipw <- function(dataframe){
+  Y = dataframe$Y
+  e = dataframe$e
+  A = dataframe$A
+  return(mean(Y * (A/e - (1-A)/(1-e))))
+}
+
+```
+
+```{r}
+simulation <- generate_lunceford(n = 5000, return_oracles = TRUE)
+ggplot(simulation, aes(x = e)) +
+  geom_histogram()
+```
+
+
+
+```{r}
+comparison.estimators <- data.frame("estimate" = c(),
+                                    "method" = c())
+
+for (i in 1:500){
+  simulation <- generate_lunceford(n = 1000, return_oracles = TRUE)
+  
+  estimates.oracle.ipw  <- oracle_ipw(simulation)
+  
+  fmla.outcome <-  formula("Y ~ X.1 + X.2 + X.3")
+  fmla.outcome.ext <-  formula("Y ~ X.1 + X.2 + X.3 + V.1 + V.2 + V.3")
+  fmla.treat <-  formula("A ~ X.1 + X.2 + X.3")
+  fmla.treat.ext  <-  formula("A ~ X.1 + X.2 + X.3 + V.1 + V.2 + V.3")
+  
+  # estimate surface responses
+  mu.1.model <- lm(fmla.outcome, 
+                     data = simulation[simulation$A == 1, ])
+  mu.0.model <- lm(fmla.outcome, 
+                     data = simulation[simulation$A == 0, ])
+  
+  # estimate surface responses with extended set
+  mu.1.model.ext  <- lm(fmla.outcome.ext, 
+                     data = simulation[simulation$A == 1, ])
+  mu.0.model.ext  <- lm(fmla.outcome.ext, 
+                     data = simulation[simulation$A == 0, ])
+  
+  # estimate propensity scores without and with extended set
+  propensity.model <- glm(fmla.treat, data = simulation, family="binomial")
+  propensity.model.ext <- glm(fmla.treat.ext, data = simulation, family="binomial")
+  
+  # Predict
+  mu.hat.1 <- predict(mu.1.model, newdata = simulation, type="response")
+  mu.hat.0 <- predict(mu.0.model, newdata = simulation, type="response")
+  
+  mu.hat.1.ext <- predict(mu.1.model.ext, newdata = simulation, type="response")
+  mu.hat.0.ext <- predict(mu.0.model.ext, newdata = simulation, type="response")
+  
+  e.hat <- predict(propensity.model, newdata = simulation, type="response")
+  e.hat.ext <- predict(propensity.model.ext, newdata = simulation, type="response")
+  
+  
+  # compute estimates
+  Y = simulation$Y
+  A = simulation$A
+  
+  ipw <- Y * (A/e.hat - (1-A)/(1-e.hat))
+  
+  ipw.ext <- Y * (A/e.hat.ext - (1-A)/(1-e.hat.ext))
+  
+  aipw <- (mu.hat.1 - mu.hat.0
+           + A / e.hat * (Y -  mu.hat.1)
+           - (1 - A) / (1 - e.hat) * (Y -  mu.hat.0))
+  aipw.ext <- (mu.hat.1.ext - mu.hat.0.ext
+           + A / e.hat.ext * (Y -  mu.hat.1.ext)
+           - (1 - A) / (1 - e.hat.ext) * (Y -  mu.hat.0.ext))
+  
+  new_row <- data.frame("estimate" = c(estimates.oracle.ipw, mean(ipw), mean(ipw.ext), mean(aipw), mean(aipw.ext)),
+                        "method" = c("IPW oracle", "IPW - X", "IPW - X + V", "AIPW - X", "AIPW - X + V"))
+  
+  comparison.estimators <- rbind(comparison.estimators, new_row)
+}
+
+
+comparison.estimators$method <- factor(comparison.estimators$method, levels = c("IPW oracle", "IPW - X", "IPW - X + V", "AIPW - X", "AIPW - X + V"))
+```
+
+
+
+```{r}
+ggplot(comparison.estimators, aes(x = method, y = estimate, fill = method)) +
+  geom_boxplot(alpha = 0.9, show.legend = FALSE) +
+  theme_minimal() +
+  xlab("") +
+  ylab("ATE") +
+  geom_hline(yintercept = 2, linetype = "dashed", color = "magenta", alpha = 0.8) +
+  theme(legend.title = element_blank(), legend.position = "bottom", 
+          legend.box = "horizontal", legend.text = element_text(size=10)) +
+  theme(axis.text = element_text(size=12),
+           axis.title.x = element_text(size=10)) +
+  scale_fill_brewer(palette = "Accent") +
+  coord_flip()
+ggsave("./fig/lunceford.pdf", width = 8, height = 5)
+```
+
