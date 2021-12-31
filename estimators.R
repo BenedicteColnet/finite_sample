@@ -35,17 +35,17 @@ aipw_forest <- function(covariates_names_vector_treatment,
       # Estimation
       outcome.model.treated <- regression_forest(X = dataframe[-idx & dataframe[,treatment_name] == 1, covariates_names_vector_outcome], 
                                                  Y = dataframe[-idx & dataframe[,treatment_name] == 1, outcome_name], 
-                                                 num.trees = 500, 
+                                                 num.trees = 1000, 
                                                  min.node.size = min.node.size.if.forest)
       
       outcome.model.control <- regression_forest(X = dataframe[-idx & dataframe[,treatment_name] == 0, covariates_names_vector_outcome], 
                                                  Y = dataframe[-idx & dataframe[,treatment_name] == 0, outcome_name], 
-                                                 num.trees = 500, 
+                                                 num.trees = 1000, 
                                                  min.node.size = min.node.size.if.forest)
       
       propensity.model <- probability_forest(dataframe[-idx, covariates_names_vector_treatment], 
                                              as.factor(W[-idx]), 
-                                             num.trees = 500, 
+                                             num.trees = 1000, 
                                              min.node.size=min.node.size.if.forest)
       
       # Prediction
