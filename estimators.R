@@ -36,12 +36,12 @@ t_learner_forest <- function(covariates_names,
   W =dataframe[, treatment_name]
   
   # Estimation
-  outcome.model.treated <- regression_forest(X = dataframe[ dataframe[,treatment_name] == 1, covariates_names_vector_treatment], 
+  outcome.model.treated <- regression_forest(X = dataframe[ dataframe[,treatment_name] == 1, covariates_names], 
                                              Y = dataframe[dataframe[,treatment_name] == 1, outcome_name], 
                                              num.trees = 1000, 
                                              min.node.size = min.node.size.if.forest)
   
-  outcome.model.control <- regression_forest(X = dataframe[dataframe[,treatment_name] == 0, covariates_names_vector_treatment], 
+  outcome.model.control <- regression_forest(X = dataframe[dataframe[,treatment_name] == 0, covariates_names], 
                                              Y = dataframe[dataframe[,treatment_name] == 0, outcome_name], 
                                              num.trees = 1000, 
                                              min.node.size = min.node.size.if.forest)
@@ -116,17 +116,17 @@ aipw_forest <- function(covariates_names_vector_treatment,
   } else if (n.folds == 0 | n.folds == 1){
     
     # Estimation
-    outcome.model.treated <- regression_forest(X = dataframe[ dataframe[,treatment_name] == 1, covariates_names_vector_treatment], 
+    outcome.model.treated <- regression_forest(X = dataframe[ dataframe[,treatment_name] == 1, covariates_names_vector_outcome], 
                                                Y = dataframe[dataframe[,treatment_name] == 1, outcome_name], 
                                                num.trees = 500, 
                                                min.node.size = min.node.size.if.forest)
     
-    outcome.model.control <- regression_forest(X = dataframe[dataframe[,treatment_name] == 0, covariates_names_vector_treatment], 
+    outcome.model.control <- regression_forest(X = dataframe[dataframe[,treatment_name] == 0, covariates_names_vector_outcome], 
                                                Y = dataframe[dataframe[,treatment_name] == 0, outcome_name], 
                                                num.trees = 500, 
                                                min.node.size = min.node.size.if.forest)
     
-    propensity.model <- probability_forest(dataframe[, covariates_names_vector_outcome], 
+    propensity.model <- probability_forest(dataframe[, covariates_names_vector_treatment], 
                                            as.factor(W), 
                                            num.trees=500, 
                                            min.node.size=min.node.size.if.forest)
