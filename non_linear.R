@@ -41,9 +41,10 @@ generate_simulation <- function(n = 1000,  return_oracles = FALSE) {
   
   
   # model for the propensity scores
-  e <- X[,3]*(1/(1 + exp(-X[,1]-X[,2]))) + (1-X[,3])*0.8*abs(sin(X[,2]))
-  mu_0 <- pmax(0, X[,2], X[,1]) + 3*X[,4] + 3*X[,5] + 3*X[,6]  
-  mu_1 <- X[,1]*X[,1] + 10*sin(pi*0.2*X[,2])
+  beta = c(0.6, -0.6, 0.6)
+  e <- ifelse(X[,3] == 0, pmin(pmax(plogis(X[, 1:3] %*% beta + 0.2*X[,1]*X[,2]), 0.01), 0.99), 0.8)
+  mu_0 <- X[,2]*X[,3] + 10*X[,4]*X[,5] + pmax(3*X[,6],0.3)
+  mu_1 <- log(1+exp(2*X[,1])) + 13*sin(pi*0.2*X[,2])
   
   simulation <- data.frame(X, e = e, mu_0 = mu_0, mu_1 = mu_1)
   simulation$A <- rbinom(n, size = 1, prob = simulation$e)
@@ -73,7 +74,7 @@ different_subset_tested <- c("extended",
                              "smart",
                              "minimal")
 
-for (sample.size in c(50, 100, 300, 1000)){
+for (sample.size in c(100, 300, 400, 500, 600)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:30){
     
