@@ -3,7 +3,6 @@ ipw_forest <- function(covariates_names,
                         dataframe,
                         outcome_name = "Y",
                         treatment_name = "A",
-                        n.folds = 2,
                         min.node.size.if.forest = 1,
                         return.decomposition = FALSE) {
   
@@ -27,7 +26,6 @@ t_learner_forest <- function(covariates_names,
                        dataframe,
                        outcome_name = "Y",
                        treatment_name = "A",
-                       n.folds = 2,
                        min.node.size.if.forest = 1,
                        return.decomposition = FALSE) {
   

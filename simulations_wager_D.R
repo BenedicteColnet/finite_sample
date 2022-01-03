@@ -50,7 +50,6 @@ for (sample.size in c(100, 300, 1000, 3000, 10000, 30000)){
         custom_ipw <- ipw_forest(covariates_names = paste0("X.", 1:6), 
                                  dataframe = a_simulation,
                                  min.node.size.if.forest = 1,
-                                 n.folds = number_of_folds,
                                  return.decomposition = TRUE)
         
         new.row <- data.frame("sample.size" = sample.size,
@@ -58,7 +57,7 @@ for (sample.size in c(100, 300, 1000, 3000, 10000, 30000)){
                               "estimator" = "ipw",
                               "subset" = method,
                               "simulation" = "D",
-                              "cross-fitting" = number_of_folds,
+                              "cross-fitting" = NA,
                               "nuisance" = "forest",
                               "term.A" = NA, 
                               "term.B" = NA, 
@@ -72,7 +71,6 @@ for (sample.size in c(100, 300, 1000, 3000, 10000, 30000)){
         custom_tl <- t_learner_forest(covariates_names = paste0("X.", 1:6), 
                                       dataframe = a_simulation,
                                       min.node.size.if.forest = 1,
-                                      n.folds = number_of_folds,
                                       return.decomposition = TRUE)
         
         new.row <- data.frame("sample.size" = sample.size,
@@ -80,7 +78,7 @@ for (sample.size in c(100, 300, 1000, 3000, 10000, 30000)){
                               "estimator" = "t-learner",
                               "subset" = method,
                               "simulation" = "D",
-                              "cross-fitting" = number_of_folds,
+                              "cross-fitting" = NA,
                               "nuisance" = "forest",
                               "term.A" = NA, 
                               "term.B" = NA, 
@@ -99,7 +97,6 @@ for (sample.size in c(100, 300, 1000, 3000, 10000, 30000)){
         custom_ipw <- ipw_forest(covariates_names = paste0("X.", 1:2), 
                                  dataframe = a_simulation,
                                  min.node.size.if.forest = 1,
-                                 n.folds = number_of_folds,
                                  return.decomposition = TRUE)
         
         new.row <- data.frame("sample.size" = sample.size,
@@ -107,7 +104,7 @@ for (sample.size in c(100, 300, 1000, 3000, 10000, 30000)){
                               "estimator" = "ipw",
                               "subset" = method,
                               "simulation" = "D",
-                              "cross-fitting" = number_of_folds,
+                              "cross-fitting" = NA,
                               "nuisance" = "forest",
                               "term.A" = NA, 
                               "term.B" = NA, 
@@ -121,7 +118,6 @@ for (sample.size in c(100, 300, 1000, 3000, 10000, 30000)){
         custom_tl <- t_learner_forest(covariates_names = paste0("X.", 1:2), 
                                       dataframe = a_simulation,
                                       min.node.size.if.forest = 1,
-                                      n.folds = number_of_folds,
                                       return.decomposition = TRUE)
         
         new.row <- data.frame("sample.size" = sample.size,
@@ -129,7 +125,7 @@ for (sample.size in c(100, 300, 1000, 3000, 10000, 30000)){
                               "estimator" = "t-learner",
                               "subset" = method,
                               "simulation" = "D",
-                              "cross-fitting" = number_of_folds,
+                              "cross-fitting" = NA,
                               "nuisance" = "forest",
                               "term.A" = NA, 
                               "term.B" = NA, 
