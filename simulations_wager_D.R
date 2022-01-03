@@ -47,45 +47,6 @@ for (sample.size in c(100, 300, 1000, 3000, 10000, 30000)){
       if (method == "extended"){
         X_treatment <- paste0("X.", 1:6)
         X_outcome <- paste0("X.", 1:6)
-      } else if (method == "smart"){
-        X_treatment <- paste0("X.", 1:2)
-        X_outcome <- paste0("X.", 1:6)
-      } else if (method == "minimal"){
-        X_treatment <- paste0("X.", 1:2)
-        X_outcome <- paste0("X.", 1:2)
-      } else {
-        stop("error in subset.")
-      }
-      
-      for (number_of_folds in c(2)){
-        
-        custom_aipw <- aipw_forest(X_treatment, 
-                                   X_outcome, 
-                                   dataframe = a_simulation,
-                                   min.node.size.if.forest = 1,
-                                   n.folds = number_of_folds,
-                                   return.decomposition = TRUE)
-        
-        new.row <- data.frame("sample.size" = sample.size,
-                              "estimate" = custom_aipw["aipw"],
-                              "estimator" = "aipw",
-                              "subset" = method,
-                              "simulation" = "D",
-                              "cross-fitting" = number_of_folds,
-                              "nuisance" = "forest",
-                              "term.A" = custom_aipw["term.A"], 
-                              "term.B" = custom_aipw["term.B"], 
-                              "term.C" = custom_aipw["term.C"],
-                              "term.D" = custom_aipw["term.D"], 
-                              "term.E" = custom_aipw["term.E"], 
-                              "term.F" = custom_aipw["term.F"])
-        results.linear <- rbind(results.linear, new.row)
-        
-      }
-      
-      
-      
-      if (method == "extended"){
         custom_ipw <- ipw_forest(covariates_names = paste0("X.", 1:6), 
                                  dataframe = a_simulation,
                                  min.node.size.if.forest = 1,
@@ -128,7 +89,12 @@ for (sample.size in c(100, 300, 1000, 3000, 10000, 30000)){
                               "term.E" = NA, 
                               "term.F" = NA)
         results.linear <- rbind(results.linear, new.row)
+      } else if (method == "smart"){
+        X_treatment <- paste0("X.", 1:2)
+        X_outcome <- paste0("X.", 1:6)
       } else if (method == "minimal"){
+        X_treatment <- paste0("X.", 1:2)
+        X_outcome <- paste0("X.", 1:2)
         
         custom_ipw <- ipw_forest(covariates_names = paste0("X.", 1:2), 
                                  dataframe = a_simulation,
@@ -153,10 +119,10 @@ for (sample.size in c(100, 300, 1000, 3000, 10000, 30000)){
         
         
         custom_tl <- t_learner_forest(covariates_names = paste0("X.", 1:2), 
-                                 dataframe = a_simulation,
-                                 min.node.size.if.forest = 1,
-                                 n.folds = number_of_folds,
-                                 return.decomposition = TRUE)
+                                      dataframe = a_simulation,
+                                      min.node.size.if.forest = 1,
+                                      n.folds = number_of_folds,
+                                      return.decomposition = TRUE)
         
         new.row <- data.frame("sample.size" = sample.size,
                               "estimate" = custom_tl,
@@ -172,12 +138,35 @@ for (sample.size in c(100, 300, 1000, 3000, 10000, 30000)){
                               "term.E" = NA, 
                               "term.F" = NA)
         results.linear <- rbind(results.linear, new.row)
-        
       } else {
         stop("error in subset.")
       }
       
-      
+      for (number_of_folds in c(2)){
+        
+        custom_aipw <- aipw_forest(X_treatment, 
+                                   X_outcome, 
+                                   dataframe = a_simulation,
+                                   min.node.size.if.forest = 1,
+                                   n.folds = number_of_folds,
+                                   return.decomposition = TRUE)
+        
+        new.row <- data.frame("sample.size" = sample.size,
+                              "estimate" = custom_aipw["aipw"],
+                              "estimator" = "aipw",
+                              "subset" = method,
+                              "simulation" = "D",
+                              "cross-fitting" = number_of_folds,
+                              "nuisance" = "forest",
+                              "term.A" = custom_aipw["term.A"], 
+                              "term.B" = custom_aipw["term.B"], 
+                              "term.C" = custom_aipw["term.C"],
+                              "term.D" = custom_aipw["term.D"], 
+                              "term.E" = custom_aipw["term.E"], 
+                              "term.F" = custom_aipw["term.F"])
+        results.linear <- rbind(results.linear, new.row)
+        
+      }
     }
   }
 }
