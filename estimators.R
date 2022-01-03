@@ -22,6 +22,40 @@ ipw_forest <- function(covariates_names,
 }
 
 
+# g-formula  with deep forest
+t_learner_forest <- function(covariates_names,
+                       dataframe,
+                       outcome_name = "Y",
+                       treatment_name = "A",
+                       n.folds = 2,
+                       min.node.size.if.forest = 1,
+                       return.decomposition = FALSE) {
+  
+  n <- nrow(dataframe)
+  Y = dataframe[, outcome_name]
+  W = dataframe[, treatment_name]
+  
+  # Estimation
+  outcome.model.treated <- regression_forest(X = dataframe[ dataframe[,treatment_name] == 1, covariates_names_vector_treatment], 
+                                             Y = dataframe[dataframe[,treatment_name] == 1, outcome_name], 
+                                             num.trees = 1000, 
+                                             min.node.size = min.node.size.if.forest)
+  
+  outcome.model.control <- regression_forest(X = dataframe[dataframe[,treatment_name] == 0, covariates_names_vector_treatment], 
+                                             Y = dataframe[dataframe[,treatment_name] == 0, outcome_name], 
+                                             num.trees = 1000, 
+                                             min.node.size = min.node.size.if.forest)
+
+  # Prediction
+  mu.hat.1 <- predict(outcome.model.treated, data = xt1)$predictions
+  mu.hat.0 <- predict(outcome.model.control, data = xt0)$predictions
+  
+  t_learner = mean(mu.hat.1) - mean(mu.hat.0)
+  
+  return(t_learner)
+}
+
+
 
 # custom AIPW with forest
 aipw_forest <- function(covariates_names_vector_treatment, 
