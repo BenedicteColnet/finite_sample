@@ -42,7 +42,7 @@ generate_simulation <- function(n = 1000,  return_oracles = FALSE) {
   # model for the propensity scores
   beta = c(0.6, -0.6, 0.6)
   e <- ifelse(X[,2] < 1, plogis(X[, 1:3] %*% beta), abs(sin(pi * 0.5 *X[,2])))
-  mu_0 <- 5*X[,3]*(1 / (1 + exp(-X[,1]))) + 5* sin(X[,2]) + ifelse(X[,5] > 0 & X[,6], 9, -9) + 3*X[,4]*X[,4]
+  mu_0 <- 5*X[,3]*(1 / (1 + exp(-X[,1]))) + 5* sin(X[,2]) + ifelse(X[,5] > 0 & X[,6] < 1, 9, -9) + 3*X[,4] + 4* X[,5]
   mu_1 <- mu_0 - 5*X[,3]*(1 / (1 + exp(-X[,1]))) + 3*(1-X[,3])*(1 / (1 + exp(+X[,1] + X[,2]))) 
   
   simulation <- data.frame(X, e = e, mu_0 = mu_0, mu_1 = mu_1)
@@ -73,7 +73,7 @@ different_subset_tested <- c("extended",
                              "smart",
                              "minimal")
 
-for (sample.size in c(100, 300, 1000, 3000, 10000)){
+for (sample.size in c(100, 300, 1000, 3000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:30){
     
