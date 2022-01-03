@@ -1,3 +1,27 @@
+# IPW with deep forest
+ipw_forest <- function(covariates_names,
+                        dataframe,
+                        outcome_name = "Y",
+                        treatment_name = "A",
+                        n.folds = 2,
+                        min.node.size.if.forest = 1,
+                        return.decomposition = FALSE) {
+  
+  n <- nrow(dataframe)
+  Y = dataframe[, outcome_name]
+  W = dataframe[, treatment_name]
+
+  propensity.model <- probability_forest(dataframe[, covariates_names], 
+                                          W, 
+                                          num.trees=1000, 
+                                          min.node.size=min.node.size.if.forest)
+  e.hat <- predict(propensity.model, data = X_t)$predictions[,2]
+  ipw = mean(Y * (W/e.hat - (1-W)/(1-e.hat)))
+
+  return(ipw)
+}
+
+
 
 # custom AIPW with forest
 aipw_forest <- function(covariates_names_vector_treatment, 
