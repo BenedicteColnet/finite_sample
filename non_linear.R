@@ -27,6 +27,8 @@ generate_simulation <- function(n = 1000,  return_oracles = FALSE) {
                        -0.5, -0.5, 1, 0.5, 
                        -0.5, -0.5, 0.5, 1), ncol = 4, byrow = TRUE)
   
+  Sigma_X3 <- diag(4)
+  
   # beginning of simulations
   X.3 <- rbinom(n, 1, prob = 0.2)
   V.3 <- rbinom(n, 1, prob = (0.75 * X.3 + (0.25 * (1 - X.3))))
