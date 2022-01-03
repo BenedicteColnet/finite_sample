@@ -129,4 +129,4 @@ for (sample.size in c(100, 300, 1000, 3000, 10000)){
 }
 
 
-write.csv(x=results.linear, file="./data/Dnon_linear.csv")
+write.csv(x=results.linear, file="./data/non_linear.csv")
