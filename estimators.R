@@ -9,7 +9,7 @@ ipw_forest <- function(covariates_names,
   
   n <- nrow(dataframe)
   Y = dataframe[, outcome_name]
-  W = dataframe[, treatment_name]
+  W = as.factor(dataframe[, treatment_name])
 
   propensity.model <- probability_forest(dataframe[, covariates_names], 
                                           W, 
@@ -33,7 +33,7 @@ t_learner_forest <- function(covariates_names,
   
   n <- nrow(dataframe)
   Y = dataframe[, outcome_name]
-  W = as.factor(dataframe[, treatment_name])
+  W =dataframe[, treatment_name]
   
   # Estimation
   outcome.model.treated <- regression_forest(X = dataframe[ dataframe[,treatment_name] == 1, covariates_names_vector_treatment], 

@@ -75,7 +75,7 @@ different_subset_tested <- c("extended",
 
 for (sample.size in c(1000)){
   print(paste0("Starting sample size ", sample.size))
-  for (i in 1:500){
+  for (i in 1:100){
     
     # generate a simulation
     a_simulation <- generate_simulation(n = sample.size, return_oracles = TRUE)
