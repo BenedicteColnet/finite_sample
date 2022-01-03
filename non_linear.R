@@ -75,7 +75,7 @@ different_subset_tested <- c("extended",
 
 for (sample.size in c(1000)){
   print(paste0("Starting sample size ", sample.size))
-  for (i in 1:30){
+  for (i in 1:500){
     
     # generate a simulation
     a_simulation <- generate_simulation(n = sample.size, return_oracles = TRUE)
@@ -104,16 +104,29 @@ for (sample.size in c(1000)){
                                    n.folds = number_of_folds,
                                    return.decomposition = TRUE)
         
+        custom_ipw <- ipw_forest(covariates_names = X_treatment, 
+                                dataframe = a_simulation,
+                                min.node.size.if.forest = 1,
+                                n.folds = number_of_folds,
+                                return.decomposition = TRUE)
+        
+        
+        custom_gformula <- t_learner_forest(covariates_names = X_outcome, 
+                                 dataframe = a_simulation,
+                                 min.node.size.if.forest = 1,
+                                 n.folds = number_of_folds,
+                                 return.decomposition = TRUE)
+        
         new.row <- data.frame("sample.size" = rep(sample.size, 3),
-                              "estimate" = c(custom_aipw["ipw"],
-                                             custom_aipw["t.learner"],
-                                             custom_aipw["aipw"]),
-                              "estimator" = rep(c("ipw",
+                              "estimate" = c(custom_aipw["aipw"],
+                                             custom_gformula,
+                                             custom_ipw),
+                              "estimator" = rep(c("aipw",
                                                   "t-learner",
-                                                  "aipw"),1),
+                                                  "ipw"),1),
                               "subset" = rep(method, 3),
                               "simulation" = rep("non-linear", 3),
-                              "cross-fitting" = rep(number_of_folds, 3),
+                              "cross-fitting" = c(number_of_folds, NA, NA),
                               "nuisance" = rep("forest",3),
                               "term.A" = rep(custom_aipw["term.A"], 3), 
                               "term.B" = rep(custom_aipw["term.B"], 3), 
