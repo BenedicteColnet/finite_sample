@@ -182,4 +182,4 @@ for (sample.size in c(100, 300, 1000, 3000, 10000, 30000)){
   }
 }
 
-write.csv(x=results.linear, file="./data/D.csv")
+write.csv(x=results.linear, file="./data/Dn.csv")
