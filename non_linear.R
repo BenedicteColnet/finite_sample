@@ -41,10 +41,9 @@ generate_simulation <- function(n = 1000,  return_oracles = FALSE) {
   
   
   # model for the propensity scores
-  beta = c(0.6, -0.6, 0.6)
-  e <- ifelse(X[,2] < 1, plogis(X[, 1:3] %*% beta), abs(sin(pi * 0.5 *X[,2])))
-  mu_0 <- 3*X[,1]*X[,1] + 3*sin(pi*X[,4]) + 3*X[,5]*X[,5] + exp(1 - X[,6])
-  mu_1 <- mu_0 + 2*X[,3]*sin(pi*X[,2]) + 2*(1-X[,3])*sin(-pi*X[,2])
+  e <- X[,3]*(1/(1 + exp(-X[,1]-X[,2]))) + (1-X[,3])*0.8*abs(sin(X[,2]))
+  mu_0 <- pmax(0, X[,2], X[,1]) + 3*X[,4] + 3*X[,5] + 3*X[,6]  
+  mu_1 <- X[,1]*X[,1] + 10*sin(pi*0.2*X[,2])
   
   simulation <- data.frame(X, e = e, mu_0 = mu_0, mu_1 = mu_1)
   simulation$A <- rbinom(n, size = 1, prob = simulation$e)
