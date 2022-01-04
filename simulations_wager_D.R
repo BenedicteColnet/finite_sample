@@ -61,8 +61,6 @@ for (sample.size in c(100, 300, 600)){
                               "estimate" = custom_ipw,
                               "estimator" = "ipw",
                               "subset" = method,
-                              "simulation" = "D",
-                              "cross-fitting" = NA,
                               "nuisance" = "forest",
                               "term.A" = NA, 
                               "term.B" = NA, 
