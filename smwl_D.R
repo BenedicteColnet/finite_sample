@@ -43,7 +43,7 @@ for (sample.size in c(100, 300, 1000, 3000, 10000, 30000)){
   for (i in 1:50){
     
     # generate a simulation
-    a_simulation <- generate_simulation_wager_nie(n = sample.size, setup = "D", all_covariates_output = TRUE)
+    simulation <- generate_simulation_wager_nie(n = sample.size, setup = "D", all_covariates_output = TRUE)
     
     # estimate surface responses
     mu.1.model <- lm(fmla.outcome, 
