@@ -33,7 +33,7 @@ different_subset_tested <- c("extended",
                              "smart",
                              "minimal")
 
-for (sample.size in c(100, 300, 900, 3000, 10000, 30000)){
+for (sample.size in c(50, 100, 300, 900, 3000, 10000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:30){
     
@@ -45,6 +45,25 @@ for (sample.size in c(100, 300, 900, 3000, 10000, 30000)){
       if (method == "extended"){
         X_treatment <- paste0("X.", 1:6)
         X_outcome <- paste0("X.", 1:6)
+        
+        custom_ipw <- ipw_forest(covariates_names = X_treatment, 
+                                 dataframe = a_simulation,
+                                 min.node.size.if.forest = 1,
+                                 return.decomposition = TRUE)
+        
+        new.row <- data.frame("sample.size" = sample.size,
+                              "estimate" = custom_ipw,
+                              "estimator" = "ipw",
+                              "subset" = method,
+                              "nuisance" = "forest",
+                              "term.A" = NA, 
+                              "term.B" = NA, 
+                              "term.C" = NA,
+                              "term.D" = NA, 
+                              "term.E" = NA, 
+                              "term.F" = NA)
+        
+        results.linear <- rbind(results.linear, new.row)
       } else if (method == "smart"){
         X_treatment <- paste0("X.", 1:2)
         X_outcome <- paste0("X.", 1:6)
