@@ -21,8 +21,6 @@ results.linear <- data.frame("sample.size" = c(),
                              "estimate" = c(),
                              "estimator" = c(),
                              "subset" = c(),
-                             "simulation" = c(),
-                             "cross-fitting" = c(),
                              "nuisance" = c(),
                              "term.A" = c(), 
                              "term.B" = c(), 
@@ -35,7 +33,7 @@ different_subset_tested <- c("extended",
                              "smart",
                              "minimal")
 
-for (sample.size in seq(500, 50000, by = 500)){
+for (sample.size in c(100, 300, 900, 3000, 10000, 30000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:30){
     
@@ -53,39 +51,49 @@ for (sample.size in seq(500, 50000, by = 500)){
       } else if (method == "minimal"){
         X_treatment <- paste0("X.", 1:2)
         X_outcome <- paste0("X.", 1:2)
+        
+        custom_ipw <- ipw_forest(covariates_names = paste0("X.", 1:2), 
+                                 dataframe = a_simulation,
+                                 min.node.size.if.forest = 1,
+                                 return.decomposition = TRUE)
+        
+        new.row <- data.frame("sample.size" = sample.size,
+                              "estimate" = custom_ipw,
+                              "estimator" = "ipw",
+                              "subset" = method,
+                              "nuisance" = "forest",
+                              "term.A" = NA, 
+                              "term.B" = NA, 
+                              "term.C" = NA,
+                              "term.D" = NA, 
+                              "term.E" = NA, 
+                              "term.F" = NA)
+        
+        results.linear <- rbind(results.linear, new.row)
+        
       } else {
         stop("error in subset.")
       }
       
-      for (number_of_folds in c(2)){
-        
-        custom_aipw <- aipw_forest(X_treatment, 
-                                   X_outcome, 
-                                   dataframe = a_simulation,
-                                   min.node.size.if.forest = 1,
-                                   n.folds = number_of_folds,
-                                   return.decomposition = TRUE)
-        
-        new.row <- data.frame("sample.size" = rep(sample.size, 3),
-                              "estimate" = c(custom_aipw["ipw"],
-                                             custom_aipw["t.learner"],
-                                             custom_aipw["aipw"]),
-                              "estimator" = rep(c("ipw",
-                                                  "t-learner",
-                                                  "aipw"),1),
-                              "subset" = rep(method, 3),
-                              "simulation" = rep("C", 3),
-                              "cross-fitting" = rep(number_of_folds, 3),
-                              "nuisance" = rep("forest",3),
-                              "term.A" = rep(custom_aipw["term.A"], 3), 
-                              "term.B" = rep(custom_aipw["term.B"], 3), 
-                              "term.C" = rep(custom_aipw["term.C"], 3),
-                              "term.D" = rep(custom_aipw["term.D"], 3), 
-                              "term.E" = rep(custom_aipw["term.E"], 3), 
-                              "term.F" = rep(custom_aipw["term.F"], 3))
-        results.linear <- rbind(results.linear, new.row)
-        
-      }
+      custom_aipw <- aipw_forest(X_treatment, 
+                                 X_outcome, 
+                                 dataframe = a_simulation,
+                                 min.node.size.if.forest = 1,
+                                 n.folds = 5,
+                                 return.decomposition = TRUE)
+      
+      new.row <- data.frame("sample.size" = rep(sample.size, 2),
+                            "estimate" = c(custom_aipw["aipw"], custom_aipw["t.learner"]),
+                            "estimator" = c("aipw", "t-learner"),
+                            "subset" = rep(method, 2),
+                            "nuisance" = rep("forest", 2),
+                            "term.A" = c(custom_aipw["term.A"], NA), 
+                            "term.B" = c(custom_aipw["term.B"], NA), 
+                            "term.C" = c(custom_aipw["term.C"], NA),
+                            "term.D" = c(custom_aipw["term.D"], NA),
+                            "term.E" = c(custom_aipw["term.E"], NA), 
+                            "term.F" = c(custom_aipw["term.F"], NA))
+      results.linear <- rbind(results.linear, new.row)
     }
   }
 }
