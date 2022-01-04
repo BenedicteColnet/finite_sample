@@ -61,7 +61,7 @@ generate_simulation_wager_nie <- function(n = 1000, p = 12, setup = "D", all_cov
     X = matrix(rnorm(n*p), n, p)
     b = (pmax(X[,1] + X[,2] + X[,3], 0) + pmax(X[,4] + X[,5], 0)) / 2 + X[,4] + 0.5 * X[,5] + 2 * X[,6]
     e = 1/(1 + exp(-X[,1]) + exp(-X[,2]))
-    tau = pmax(X[,1] + X[,2] + X[,3], 0) - pmax(X[,4] + X[,5], 0)
+    tau = pmax(X[,1] + X[,2], 0) - pmax(X[,3] + X[,4] + X[,5], 0)
   } else {
     print("error in setup")
     break
