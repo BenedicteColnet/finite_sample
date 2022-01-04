@@ -85,7 +85,7 @@ for (sample.size in c(100, 300, 600)){
                                    return.decomposition = TRUE)
         
       new.row <- data.frame("sample.size" = rep(sample.size, 2),
-                              "estimate" = c(custom_aipw["aipw"], custom_aipw["t-learner"]),
+                              "estimate" = c(custom_aipw["aipw"], custom_aipw["t.learner"]),
                               "estimator" = c("aipw", "t-learner"),
                               "subset" = rep(method, 2),
                               "nuisance" = rep("forest", 2),
