@@ -8,12 +8,12 @@ ipw_forest <- function(covariates_names,
   
   n <- nrow(dataframe)
   Y = dataframe[, outcome_name]
-  W = as.factor(dataframe[, treatment_name])
+  W = dataframe[, treatment_name]
 
   propensity.model <- probability_forest(dataframe[, covariates_names], 
-                                          W, 
-                                          num.trees=1000, 
-                                          min.node.size=min.node.size.if.forest)
+                                         as.factor(W), 
+                                          num.trees = 1000, 
+                                          min.node.size = min.node.size.if.forest)
   e.hat <- predict(propensity.model, data = X_t)$predictions[,2]
   ipw = mean(Y * (W/e.hat - (1-W)/(1-e.hat)))
 
@@ -31,7 +31,7 @@ t_learner_forest <- function(covariates_names,
   
   n <- nrow(dataframe)
   Y = dataframe[, outcome_name]
-  W =dataframe[, treatment_name]
+  W = dataframe[, treatment_name]
   
   # Estimation
   outcome.model.treated <- regression_forest(X = dataframe[ dataframe[,treatment_name] == 1, covariates_names], 
