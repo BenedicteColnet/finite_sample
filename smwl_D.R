@@ -94,7 +94,7 @@ for (sample.size in c(100, 300, 1000, 3000, 10000, 30000)){
     gformula <- mu.hat.1 - mu.hat.0
     gformula.ext <- mu.hat.1.ext - mu.hat.0.ext
     
-    new.row <- data.frame("sample.size" = rep(sample.size, 2),
+    new.row <- data.frame("sample.size" = rep(sample.size, 7),
                           "estimate" = c(mean(ipw),
                                          mean(ipw.ext),
                                          mean(gformula),
