@@ -33,7 +33,7 @@ different_subset_tested <- c("extended",
                              "smart",
                              "minimal")
 
-for (sample.size in c(100, 300, 1000, 3000, 10000, 30000)){
+for (sample.size in c(100, 300, 1000, 3000, 10000, 30000, 100000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:50){
     
@@ -64,7 +64,6 @@ for (sample.size in c(100, 300, 1000, 3000, 10000, 30000)){
                               "term.F" = NA)
         
         results.linear <- rbind(results.linear, new.row)
-        
       } else if (method == "smart"){
         X_treatment <- paste0("X.", 1:2)
         X_outcome <- paste0("X.", 1:6)
@@ -102,17 +101,17 @@ for (sample.size in c(100, 300, 1000, 3000, 10000, 30000)){
                                  n.folds = 5,
                                  return.decomposition = TRUE)
       
-      new.row <- data.frame("sample.size" = rep(sample.size, 2),
-                            "estimate" = c(custom_aipw["aipw"], custom_aipw["t.learner"]),
-                            "estimator" = c("aipw", "t-learner"),
-                            "subset" = rep(method, 2),
-                            "nuisance" = rep("forest", 2),
-                            "term.A" = c(custom_aipw["term.A"], NA), 
-                            "term.B" = c(custom_aipw["term.B"], NA), 
-                            "term.C" = c(custom_aipw["term.C"], NA),
-                            "term.D" = c(custom_aipw["term.D"], NA),
-                            "term.E" = c(custom_aipw["term.E"], NA), 
-                            "term.F" = c(custom_aipw["term.F"], NA))
+      new.row <- data.frame("sample.size" = rep(sample.size, 3),
+                            "estimate" = c(custom_aipw["aipw"], custom_aipw["t.learner"], custom_aipw["ipw"]),
+                            "estimator" = c("aipw", "t-learner", "ipw.cross.fit"),
+                            "subset" = rep(method, 3),
+                            "nuisance" = rep("forest", 3),
+                            "term.A" = c(custom_aipw["term.A"], NA, NA), 
+                            "term.B" = c(custom_aipw["term.B"], NA, NA), 
+                            "term.C" = c(custom_aipw["term.C"], NA, NA),
+                            "term.D" = c(custom_aipw["term.D"], NA, NA),
+                            "term.E" = c(custom_aipw["term.E"], NA, NA), 
+                            "term.F" = c(custom_aipw["term.F"], NA, NA))
       results.linear <- rbind(results.linear, new.row)
     }
   }
