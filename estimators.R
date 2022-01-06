@@ -63,7 +63,8 @@ aipw_forest <- function(covariates_names_vector_treatment,
                         treatment_name = "A",
                         n.folds = 2,
                         min.node.size.if.forest = 1,
-                        return.decomposition = FALSE) {
+                        return.decomposition = FALSE,
+                        with.weights = FALSE) {
   
   n <- nrow(dataframe)
   
@@ -88,21 +89,45 @@ aipw_forest <- function(covariates_names_vector_treatment,
     
     # cross-fitting of nuisance parameters
     for (idx in indices) {
+      
+      
       # Estimation
-      outcome.model.treated <- regression_forest(X = dataframe[-idx & dataframe[,treatment_name] == 1, covariates_names_vector_outcome], 
-                                                 Y = dataframe[-idx & dataframe[,treatment_name] == 1, outcome_name], 
-                                                 num.trees = 1000, 
-                                                 min.node.size = min.node.size.if.forest)
-      
-      outcome.model.control <- regression_forest(X = dataframe[-idx & dataframe[,treatment_name] == 0, covariates_names_vector_outcome], 
-                                                 Y = dataframe[-idx & dataframe[,treatment_name] == 0, outcome_name], 
-                                                 num.trees = 1000, 
-                                                 min.node.size = min.node.size.if.forest)
-      
       propensity.model <- probability_forest(dataframe[-idx, covariates_names_vector_treatment], 
                                              as.factor(W[-idx]), 
                                              num.trees = 1000, 
                                              min.node.size=min.node.size.if.forest)
+      
+      if (!with.weights){
+        outcome.model.treated <- regression_forest(X = dataframe[-idx & dataframe[,treatment_name] == 1, covariates_names_vector_outcome], 
+                                                   Y = dataframe[-idx & dataframe[,treatment_name] == 1, outcome_name], 
+                                                   num.trees = 1000, 
+                                                   min.node.size = min.node.size.if.forest)
+        
+        outcome.model.control <- regression_forest(X = dataframe[-idx & dataframe[,treatment_name] == 0, covariates_names_vector_outcome], 
+                                                   Y = dataframe[-idx & dataframe[,treatment_name] == 0, outcome_name], 
+                                                   num.trees = 1000, 
+                                                   min.node.size = min.node.size.if.forest)
+      } else {
+        
+        weights <- dataframe[-idx, covariates_names_vector_treatment]
+        weights$w <- predict(propensity.model, newdata = dataframe[,covariates_names_vector_treatment])$predictions[,2]
+        
+        outcome.model.treated <- regression_forest(X = dataframe[-idx & dataframe[,treatment_name] == 1, covariates_names_vector_outcome], 
+                                                   Y = dataframe[-idx & dataframe[,treatment_name] == 1, outcome_name], 
+                                                   num.trees = 1000, 
+                                                   min.node.size = min.node.size.if.forest,
+                                                   sample.weights = 1/weights[weights$A == 1, "w"])
+        
+        outcome.model.control <- regression_forest(X = dataframe[-idx & dataframe[,treatment_name] == 0, covariates_names_vector_outcome], 
+                                                   Y = dataframe[-idx & dataframe[,treatment_name] == 0, outcome_name], 
+                                                   num.trees = 1000, 
+                                                   min.node.size = min.node.size.if.forest,
+                                                   sample.weights = 1/(1-weights[weights$A == 0, "w"]))
+        
+      }
+      
+      
+      
       
       # Prediction
       mu.hat.1[idx] <- predict(outcome.model.treated, newdata = xt1[idx,])$predictions
