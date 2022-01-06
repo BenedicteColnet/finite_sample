@@ -109,7 +109,7 @@ aipw_forest <- function(covariates_names_vector_treatment,
                                                    min.node.size = min.node.size.if.forest)
       } else {
         
-        weights <- dataframe[-idx, covariates_names_vector_treatment]
+        weights <- dataframe[-idx, c(covariates_names_vector_treatment, treatment_name)]
         weights$w <- predict(propensity.model, newdata = dataframe[,covariates_names_vector_treatment])$predictions[,2]
         
         outcome.model.treated <- regression_forest(X = dataframe[-idx & dataframe[,treatment_name] == 1, covariates_names_vector_outcome], 
