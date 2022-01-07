@@ -26,21 +26,20 @@ different_subset_tested <- c("extended",
                              "minimal")
 
 
-for (sample.size in c(150, 300, 500, 1000)){
+for (sample.size in c(100, 300, 1000, 3000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:50){
     # generate a simulation
-    simulation <- generate_simulation_wager_nie(n = sample.size, setup = "D.bis")
-    simulation.for.e <- generate_simulation_wager_nie(n = sample.size, setup = "D.bis")
+    simulation <- generate_simulation_wager_nie(n = sample.size, setup = "A")
     
     # choose subset
     for (method in different_subset_tested){
       if (method == "extended"){
-        X_treatment <- paste0("X.", 1:5)
-        X_outcome <- paste0("X.", 1:5)
+        X_treatment <- paste0("X.", 1:6)
+        X_outcome <- paste0("X.", 1:6)
       } else if (method == "smart"){
         X_treatment <- paste0("X.", 1:2)
-        X_outcome <- paste0("X.", 1:5)
+        X_outcome <-paste0("X.", 1:6)
       } else if (method == "minimal"){
         X_treatment <- paste0("X.", 1:2)
         X_outcome <- paste0("X.", 1:2)
@@ -49,25 +48,23 @@ for (sample.size in c(150, 300, 500, 1000)){
       }
     
       # fit models
-      outcome.model.treated <-  ranger(Y ~ .,  
-                                       num.trees = 500, 
-                                       max.depth = NULL,
-                                       min.node.size = 1, 
-                                       data = simulation[simulation$A == 1, c("Y", X_outcome)])
-      outcome.model.control <-  ranger(Y ~ .,  
-                                       num.trees = 500, 
-                                       max.depth = NULL,
-                                       min.node.size = 1, 
-                                       data = simulation[simulation$A == 0, c("Y", X_outcome)])
+      outcome.model.treated <-  regression_forest(X = simulation[simulation$A == 1, X_outcome], 
+                                                  Y = dataframe[simulation$A == 1, "Y"], 
+                                                  num.trees = 1000, 
+                                                  min.node.size = 1)
+      outcome.model.control <-  regression_forest(X = dataframe[simulation$A == 0, X_outcome], 
+                                                  Y = dataframe[simulation$A == 0, "Y"], 
+                                                  num.trees = 1000, 
+                                                  min.node.size = 1)
       
-      propensity.model <- probability_forest(simulation.for.e[, X_treatment], 
-                                             as.factor(simulation.for.e[, "A"]), 
-                                             num.trees = 500, 
+      propensity.model <- probability_forest(simulation[, X_treatment], 
+                                             as.factor(simulation[, "A"]), 
+                                             num.trees = 1000, 
                                              min.node.size=1)
       
       
       # prediction and estimation
-      simulation.to.estimate <- generate_simulation_wager_nie(n = 10000, setup = "D.bis", all_covariates_output = TRUE)
+      simulation.to.estimate <- generate_simulation_wager_nie(n = 100000, setup = "A", all_covariates_output = TRUE)
       mu.hat.1 <- predict(outcome.model.treated, simulation.to.estimate[, X_outcome])$predictions
       bias.mu.1 <- mean(mu.hat.1-simulation.to.estimate$mu_1)
       mu.hat.0 <- predict(outcome.model.control, simulation.to.estimate[, X_outcome])$predictions
@@ -101,5 +98,5 @@ for (sample.size in c(150, 300, 500, 1000)){
   }
 }
 
-write.csv(x=results, file="./data/b.csv")
+write.csv(x=results, file="./data/b_A.csv")
 
