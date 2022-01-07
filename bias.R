@@ -49,11 +49,11 @@ for (sample.size in c(100, 300, 1000, 3000)){
     
       # fit models
       outcome.model.treated <-  regression_forest(X = simulation[simulation$A == 1, X_outcome], 
-                                                  Y = dataframe[simulation$A == 1, "Y"], 
+                                                  Y = simulation[simulation$A == 1, "Y"], 
                                                   num.trees = 1000, 
                                                   min.node.size = 1)
-      outcome.model.control <-  regression_forest(X = dataframe[simulation$A == 0, X_outcome], 
-                                                  Y = dataframe[simulation$A == 0, "Y"], 
+      outcome.model.control <-  regression_forest(X = simulation[simulation$A == 0, X_outcome], 
+                                                  Y = simulation[simulation$A == 0, "Y"], 
                                                   num.trees = 1000, 
                                                   min.node.size = 1)
       
