@@ -182,6 +182,10 @@ aipw_forest <- function(covariates_names_vector_treatment,
     res = c("ipw" = ipw, "t.learner" = g_formula, "aipw" = aipw)
   } else {
     
+    semi.oracle.aipw <- mean(dataframe$mu_1 - dataframe$mu_0
+                             + W / e.hat * (Y -  dataframe$mu_1)
+                             - (1 - W) / (1 - e.hat) * (Y -  dataframe$mu_0))
+    
     # warning, this loop requires the dataframe to contain extra-info such as mu_1 and true e
     term.A <- mean( (dataframe$mu_1 - mu.hat.1) * (1 - (dataframe$A /dataframe$e))  ) 
     term.B <- mean( dataframe$A * (dataframe$Y - dataframe$mu_1) * ((1/e.hat) - (1/dataframe$e))  )
@@ -191,11 +195,10 @@ aipw_forest <- function(covariates_names_vector_treatment,
     term.E <- mean( (1 - dataframe$A) * (dataframe$Y - dataframe$mu_0) * ((1/ (1 - e.hat)) - (1/ (1 - dataframe$e) ) )  )
     term.F <- mean(  (1 - dataframe$A) * ( (1/ (1 - e.hat)) - (1/ (1 - dataframe$e)) ) * (mu.hat.0-dataframe$mu_0) )
     
-    
-    
     res = c("ipw" = ipw, "t.learner" = g_formula, "aipw" = aipw,
             "term.A" = term.A, "term.B" = term.B, "term.C" = term.C,
-            "term.D" = term.D, "term.E" = term.E, "term.F" = term.F)
+            "term.D" = term.D, "term.E" = term.E, "term.F" = term.F, 
+            "semi.oracle.aipw" = semi.oracle.aipw)
   }
   
   

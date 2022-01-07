@@ -33,7 +33,7 @@ different_subset_tested <- c("extended",
                              "smart",
                              "minimal")
 
-for (sample.size in c(100, 300, 1000, 3000, 10000, 30000, 100000)){
+for (sample.size in c(100, 300, 1000, 3000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:50){
     
@@ -101,20 +101,20 @@ for (sample.size in c(100, 300, 1000, 3000, 10000, 30000, 100000)){
                                  n.folds = 5,
                                  return.decomposition = TRUE)
       
-      new.row <- data.frame("sample.size" = rep(sample.size, 3),
-                            "estimate" = c(custom_aipw["aipw"], custom_aipw["t.learner"], custom_aipw["ipw"]),
-                            "estimator" = c("aipw", "t-learner", "ipw.cross.fit"),
-                            "subset" = rep(method, 3),
-                            "nuisance" = rep("forest", 3),
-                            "term.A" = c(custom_aipw["term.A"], NA, NA), 
-                            "term.B" = c(custom_aipw["term.B"], NA, NA), 
-                            "term.C" = c(custom_aipw["term.C"], NA, NA),
-                            "term.D" = c(custom_aipw["term.D"], NA, NA),
-                            "term.E" = c(custom_aipw["term.E"], NA, NA), 
-                            "term.F" = c(custom_aipw["term.F"], NA, NA))
+      new.row <- data.frame("sample.size" = rep(sample.size, 4),
+                            "estimate" = c(custom_aipw["aipw"], custom_aipw["t.learner"], custom_aipw["ipw"], custom_aipw["semi.oracle.aipw"]),
+                            "estimator" = c("aipw", "t-learner", "ipw.cross.fit", "semi.oracle.aipw"),
+                            "subset" = rep(method, 4),
+                            "nuisance" = rep("forest", 4),
+                            "term.A" = c(custom_aipw["term.A"], NA, NA, NA), 
+                            "term.B" = c(custom_aipw["term.B"], NA, NA, NA), 
+                            "term.C" = c(custom_aipw["term.C"], NA, NA, NA),
+                            "term.D" = c(custom_aipw["term.D"], NA, NA, NA),
+                            "term.E" = c(custom_aipw["term.E"], NA, NA, NA), 
+                            "term.F" = c(custom_aipw["term.F"], NA, NA, NA))
       results.linear <- rbind(results.linear, new.row)
     }
   }
 }
 
-write.csv(x=results.linear, file="./data/A.csv")
+write.csv(x=results.linear, file="./data/A-semi-oracle.csv")
