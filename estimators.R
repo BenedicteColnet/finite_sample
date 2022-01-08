@@ -107,20 +107,22 @@ aipw_forest <- function(covariates_names_vector_treatment,
                                                    min.node.size = min.node.size.if.forest)
       } else {
         
-        weights <- dataframe[-idx, c(covariates_names_vector_treatment, treatment_name)]
-        weights$w <- predict(propensity.model, newdata = dataframe[,covariates_names_vector_treatment])$predictions[,2]
+        weights.for.treated <- dataframe[-idx & dataframe[,treatment_name] == 1, c(covariates_names_vector_treatment, treatment_name)]
+        weights.treated <- predict(propensity.model, newdata = weights.for.treated[,covariates_names_vector_treatment])$predictions[,2]
+        weights.for.control <- dataframe[-idx & dataframe[,treatment_name] == 0, c(covariates_names_vector_treatment, treatment_name)]
+        weights.control <- predict(propensity.model, newdata = weights.for.control[,covariates_names_vector_treatment])$predictions[,2]
         
         outcome.model.treated <- regression_forest(X = dataframe[-idx & dataframe[,treatment_name] == 1, covariates_names_vector_outcome], 
                                                    Y = dataframe[-idx & dataframe[,treatment_name] == 1, outcome_name], 
                                                    num.trees = 1000, 
                                                    min.node.size = min.node.size.if.forest,
-                                                   sample.weights = 1/weights[weights$A == 1, "w"])
+                                                   sample.weights = 1/weights.treated)
         
         outcome.model.control <- regression_forest(X = dataframe[-idx & dataframe[,treatment_name] == 0, covariates_names_vector_outcome], 
                                                    Y = dataframe[-idx & dataframe[,treatment_name] == 0, outcome_name], 
                                                    num.trees = 1000, 
                                                    min.node.size = min.node.size.if.forest,
-                                                   sample.weights = 1/(1-weights[weights$A == 0, "w"]))
+                                                   sample.weights = 1/(1-weights.control))
         
       }
       
