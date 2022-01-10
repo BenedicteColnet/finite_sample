@@ -185,10 +185,10 @@ aipw_forest <- function(covariates_names_vector_treatment,
     # warning, this loop requires the dataframe to contain extra-info such as mu_1 and true e
     term.A <- mean( (dataframe$mu_1 - mu.hat.1) * (1 - (dataframe$A /dataframe$e))  ) 
     term.B <- mean( dataframe$A * (dataframe$Y - dataframe$mu_1) * ((1/e.hat) - (1/dataframe$e))  )
-    term.C <- mean( dataframe$A * ( (1/e.hat) - (1/dataframe$e) ) * (mu.hat.1-dataframe$mu_1) )
+    term.C <- - mean( dataframe$A * ( (1/e.hat) - (1/dataframe$e) ) * (mu.hat.1-dataframe$mu_1) )
     
-    term.D <- mean( (dataframe$mu_0 - mu.hat.0) * (1 - ( (1 - dataframe$A) / (1 - dataframe$e)))  ) 
-    term.E <- mean( (1 - dataframe$A) * (dataframe$Y - dataframe$mu_0) * ((1/ (1 - e.hat)) - (1/ (1 - dataframe$e) ) )  )
+    term.D <- - mean( (dataframe$mu_0 - mu.hat.0) * (1 - ( (1 - dataframe$A) / (1 - dataframe$e)))  ) 
+    term.E <- - mean( (1 - dataframe$A) * (dataframe$Y - dataframe$mu_0) * ((1/ (1 - e.hat)) - (1/ (1 - dataframe$e) ) )  )
     term.F <- mean(  (1 - dataframe$A) * ( (1/ (1 - e.hat)) - (1/ (1 - dataframe$e)) ) * (mu.hat.0-dataframe$mu_0) )
     
     res = c("ipw" = ipw, "t.learner" = g_formula, "aipw" = aipw,

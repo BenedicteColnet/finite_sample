@@ -98,20 +98,29 @@ for (sample.size in c(100, 300, 1000, 3000, 10000, 30000, 100000)){
                                  X_outcome, 
                                  dataframe = a_simulation,
                                  min.node.size.if.forest = 1,
-                                 n.folds = 5,
-                                 return.decomposition = TRUE)
+                                 n.folds = 2,
+                                 return.decomposition = TRUE,
+                                 with.weights = FALSE)
       
-      new.row <- data.frame("sample.size" = rep(sample.size, 3),
-                            "estimate" = c(custom_aipw["aipw"], custom_aipw["t.learner"], custom_aipw["ipw"]),
-                            "estimator" = c("aipw", "t-learner", "ipw.cross.fit"),
-                            "subset" = rep(method, 3),
-                            "nuisance" = rep("forest", 3),
-                            "term.A" = c(custom_aipw["term.A"], NA, NA), 
-                            "term.B" = c(custom_aipw["term.B"], NA, NA), 
-                            "term.C" = c(custom_aipw["term.C"], NA, NA),
-                            "term.D" = c(custom_aipw["term.D"], NA, NA),
-                            "term.E" = c(custom_aipw["term.E"], NA, NA), 
-                            "term.F" = c(custom_aipw["term.F"], NA, NA))
+      custom_aipw_with_weigths <- aipw_forest(X_treatment, 
+                                              X_outcome, 
+                                              dataframe = a_simulation,
+                                              min.node.size.if.forest = 1,
+                                              n.folds = 2,
+                                              return.decomposition = TRUE,
+                                              with.weights = TRUE)
+      
+      new.row <- data.frame("sample.size" = rep(sample.size, 5),
+                            "estimate" = c(custom_aipw["aipw"], custom_aipw["t.learner"], custom_aipw["ipw"], custom_aipw["semi.oracle.aipw"], custom_aipw_with_weigths["aipw"]),
+                            "estimator" = c("aipw", "t-learner", "ipw.cross.fit", "semi.oracle.aipw", "aipw.w"),
+                            "subset" = rep(method, 5),
+                            "nuisance" = rep("forest", 5),
+                            "term.A" = c(custom_aipw["term.A"], NA, NA, NA, custom_aipw_with_weigths["term.A"]), 
+                            "term.B" = c(custom_aipw["term.B"], NA, NA, NA, custom_aipw_with_weigths["term.B"]), 
+                            "term.C" = c(custom_aipw["term.C"], NA, NA, NA, custom_aipw_with_weigths["term.C"]),
+                            "term.D" = c(custom_aipw["term.D"], NA, NA, NA, custom_aipw_with_weigths["term.D"]),
+                            "term.E" = c(custom_aipw["term.E"], NA, NA, NA, custom_aipw_with_weigths["term.E"]), 
+                            "term.F" = c(custom_aipw["term.F"], NA, NA, NA, custom_aipw_with_weigths["term.F"]))
       results.linear <- rbind(results.linear, new.row)
     }
   }

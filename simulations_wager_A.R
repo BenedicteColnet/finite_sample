@@ -33,7 +33,7 @@ different_subset_tested <- c("extended",
                              "smart",
                              "minimal")
 
-for (sample.size in c(100, 300, 1000, 3000)){
+for (sample.size in c(100, 300, 1000, 3000, 10000, 30000, 100000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:50){
     
@@ -98,7 +98,7 @@ for (sample.size in c(100, 300, 1000, 3000)){
                                  X_outcome, 
                                  dataframe = a_simulation,
                                  min.node.size.if.forest = 1,
-                                 n.folds = 5,
+                                 n.folds = 2,
                                  return.decomposition = TRUE,
                                  with.weights = FALSE)
       
@@ -106,7 +106,7 @@ for (sample.size in c(100, 300, 1000, 3000)){
                                  X_outcome, 
                                  dataframe = a_simulation,
                                  min.node.size.if.forest = 1,
-                                 n.folds = 5,
+                                 n.folds = 2,
                                  return.decomposition = TRUE,
                                  with.weights = TRUE)
       
@@ -126,4 +126,4 @@ for (sample.size in c(100, 300, 1000, 3000)){
   }
 }
 
-write.csv(x=results.linear, file="./data/A-t.csv")
+write.csv(x=results.linear, file="./data/A.csv")

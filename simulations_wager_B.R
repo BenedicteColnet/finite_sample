@@ -21,92 +21,109 @@ results.linear <- data.frame("sample.size" = c(),
                              "estimate" = c(),
                              "estimator" = c(),
                              "subset" = c(),
-                             "simulation" = c(),
-                             "cross-fitting" = c())
+                             "nuisance" = c(),
+                             "term.A" = c(), 
+                             "term.B" = c(), 
+                             "term.C" = c(),
+                             "term.D" = c(), 
+                             "term.E" = c(), 
+                             "term.F" = c())
 
-different_subset_tested <- c("all.covariates",
-                             "all.covariates.wo.instruments",
+different_subset_tested <- c("extended",
                              "smart",
-                             "minimal.set")
+                             "minimal")
 
-for (sample.size in c(3000, 9000, 30000)){
+for (sample.size in c(100, 300, 1000, 3000, 10000, 30000, 100000)){
   print(paste0("Starting sample size ", sample.size))
-  for (i in 1:20){
-    print(paste0("Repetition:", i))
+  for (i in 1:50){
+    
     # generate a simulation
-    a_simulation <- generate_simulation_wager_nie(n = sample.size, setup = "B")
+    a_simulation <- generate_simulation_wager_nie(n = sample.size, setup = "B", all_covariates_output = TRUE)
     
     # choose subset
     for (method in different_subset_tested){
-      if (method == "all.covariates"){
-        X_treatment <- paste0("X.", 1:12)
-        X_outcome <- paste0("X.", 1:12)
-      } else if (method == "all.covariates.wo.instruments"){
-        X_treatment <- paste0("X.", 2:12)
-        X_outcome <- paste0("X.", 2:12)
+      if (method == "extended"){
+        X_treatment <- paste0("X.", 1:6)
+        X_outcome <- paste0("X.", 1:6)
+        
+        custom_ipw <- ipw_forest(covariates_names = X_treatment, 
+                                 dataframe = a_simulation,
+                                 min.node.size.if.forest = 1,
+                                 return.decomposition = TRUE)
+        
+        new.row <- data.frame("sample.size" = sample.size,
+                              "estimate" = custom_ipw,
+                              "estimator" = "ipw",
+                              "subset" = method,
+                              "nuisance" = "forest",
+                              "term.A" = NA, 
+                              "term.B" = NA, 
+                              "term.C" = NA,
+                              "term.D" = NA, 
+                              "term.E" = NA, 
+                              "term.F" = NA)
+        
+        results.linear <- rbind(results.linear, new.row)
       } else if (method == "smart"){
-        X_treatment <- paste0("X.", 2:6)
-        X_outcome <- paste0("X.", 2:3)
-      } else if (method == "minimal.set"){
-        X_treatment <- paste0("X.", 2:3)
-        X_outcome <- paste0("X.", 2:3)
+        X_treatment <- paste0("X.", 1:2)
+        X_outcome <- paste0("X.", 1:6)
+      } else if (method == "minimal"){
+        X_treatment <- paste0("X.", 1:2)
+        X_outcome <- paste0("X.", 1:2)
+        
+        custom_ipw <- ipw_forest(covariates_names = paste0("X.", 1:2), 
+                                 dataframe = a_simulation,
+                                 min.node.size.if.forest = 1,
+                                 return.decomposition = TRUE)
+        
+        new.row <- data.frame("sample.size" = sample.size,
+                              "estimate" = custom_ipw,
+                              "estimator" = "ipw",
+                              "subset" = method,
+                              "nuisance" = "forest",
+                              "term.A" = NA, 
+                              "term.B" = NA, 
+                              "term.C" = NA,
+                              "term.D" = NA, 
+                              "term.E" = NA, 
+                              "term.F" = NA)
+        
+        results.linear <- rbind(results.linear, new.row)
+        
       } else {
         stop("error in subset.")
       }
       
-      for (number_of_folds in c(5)){
-        
-        SL.o = c("SL.mean", "SL.lm", "SL.ranger", "SL.glmnet")
-        SL.t = c("SL.glm", "SL.mean", "SL.ranger", "SL.glmnet")
-        
-        
-        custom_aipw <- aipw_ML(covariates_names_vector_treatment = X_treatment, 
-                               covariates_names_vector_outcome = X_outcome, 
-                               dataframe = a_simulation, 
-                               n.folds = number_of_folds,
-                               sl_libs_outcome = SL.o,
-                               sl_libs_treatment = SL.t)
-        
-        aipw.wrapper <- aipw_wrapped(covariates_names_vector_treatment = X_treatment, 
-                                     covariates_names_vector_outcome = X_outcome, 
-                                     dataframe = a_simulation, 
-                                     n.folds = number_of_folds,
-                                     sl_libs_outcome = SL.o,
-                                     sl_libs_treatment = SL.t)
-        
-        tmle.wrapper <- tmle_wrapper(covariates_names_vector = X_outcome, 
-                                     dataframe = a_simulation, 
-                                     n.folds = number_of_folds,
-                                     sl_libs_outcome = SL.o,
-                                     sl_libs_treatment = SL.t)
-        
-        grf.wrapper <- causal_forest_wrapper(covariates_names_vector = X_outcome, 
-                                             dataframe = a_simulation)
-        
-        
-        
-        new.row <- data.frame("sample.size" = rep(sample.size, 6),
-                              "estimate" = c(custom_aipw["ipw"],
-                                             custom_aipw["t.learner"],
-                                             custom_aipw["aipw"],
-                                             aipw.wrapper,
-                                             tmle.wrapper,
-                                             grf.wrapper),
-                              "estimator" = c("ipw",
-                                              "t-learner",
-                                              "aipw",
-                                              "wrapper aipw",
-                                              "wrapper tmle",
-                                              "wrapper grf"),
-                              "subset" = rep(method, 6),
-                              "simulation" = rep("wager-C", 6),
-                              "cross-fitting" = c(rep(number_of_folds, 4), NA, NA))
-        results.linear <- rbind(results.linear, new.row)
-        
-      }
+      custom_aipw <- aipw_forest(X_treatment, 
+                                 X_outcome, 
+                                 dataframe = a_simulation,
+                                 min.node.size.if.forest = 1,
+                                 n.folds = 2,
+                                 return.decomposition = TRUE,
+                                 with.weights = FALSE)
+      
+      custom_aipw_with_weigths <- aipw_forest(X_treatment, 
+                                              X_outcome, 
+                                              dataframe = a_simulation,
+                                              min.node.size.if.forest = 1,
+                                              n.folds = 2,
+                                              return.decomposition = TRUE,
+                                              with.weights = TRUE)
+      
+      new.row <- data.frame("sample.size" = rep(sample.size, 5),
+                            "estimate" = c(custom_aipw["aipw"], custom_aipw["t.learner"], custom_aipw["ipw"], custom_aipw["semi.oracle.aipw"], custom_aipw_with_weigths["aipw"]),
+                            "estimator" = c("aipw", "t-learner", "ipw.cross.fit", "semi.oracle.aipw", "aipw.w"),
+                            "subset" = rep(method, 5),
+                            "nuisance" = rep("forest", 5),
+                            "term.A" = c(custom_aipw["term.A"], NA, NA, NA, custom_aipw_with_weigths["term.A"]), 
+                            "term.B" = c(custom_aipw["term.B"], NA, NA, NA, custom_aipw_with_weigths["term.B"]), 
+                            "term.C" = c(custom_aipw["term.C"], NA, NA, NA, custom_aipw_with_weigths["term.C"]),
+                            "term.D" = c(custom_aipw["term.D"], NA, NA, NA, custom_aipw_with_weigths["term.D"]),
+                            "term.E" = c(custom_aipw["term.E"], NA, NA, NA, custom_aipw_with_weigths["term.E"]), 
+                            "term.F" = c(custom_aipw["term.F"], NA, NA, NA, custom_aipw_with_weigths["term.F"]))
+      results.linear <- rbind(results.linear, new.row)
     }
   }
 }
 
-
-write.csv(x=results.linear, file="./data/2021-10-27-wager-B.csv")
+write.csv(x=results.linear, file="./data/B.csv")
