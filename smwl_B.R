@@ -43,7 +43,7 @@ for (sample.size in c(100, 300, 1000, 3000, 10000, 30000, 100000)){
   for (i in 1:50){
     
     # generate a simulation
-    simulation <- generate_simulation_wager_nie(n = sample.size, setup = "D", all_covariates_output = TRUE)
+    simulation <- generate_simulation_wager_nie(n = sample.size, setup = "B", all_covariates_output = TRUE)
     
     # estimate surface responses
     mu.1.model <- lm(fmla.outcome, 
@@ -116,4 +116,4 @@ for (sample.size in c(100, 300, 1000, 3000, 10000, 30000, 100000)){
   }
 }
 
-write.csv(x=results.linear, file="./data/D_linear.csv")
+write.csv(x=results.linear, file="./data/B_linear.csv")
