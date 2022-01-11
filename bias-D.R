@@ -26,7 +26,7 @@ different_subset_tested <- c("extended",
                              "minimal")
 
 
-for (sample.size in c(100, 300, 1000, 3000)){
+for (sample.size in c(100, 300, 1000, 3000, 10000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:50){
     # generate a simulation
@@ -77,7 +77,7 @@ for (sample.size in c(100, 300, 1000, 3000)){
       term.B <- mean( simulation.to.estimate$A * (simulation.to.estimate$Y - simulation.to.estimate$mu_1) * ((1/e.hat) - (1/simulation.to.estimate$e))  )
       term.C <- -  mean( simulation.to.estimate$A * (mu.hat.1-simulation.to.estimate$mu_1) * ((1/e.hat) - (1/simulation.to.estimate$e))  )
       term.D <- -  mean( (mu.hat.0 - simulation.to.estimate$mu_0) * (1 - (  (1 - simulation.to.estimate$A) / (1 - simulation.to.estimate$e)))  ) 
-      term.E <- - mean( (1 - simulation.to.estimate$A) * (simulation.to.estimate$Y - simulation.to.estimate$mu_1) * ((1/ (1-e.hat)) - (1/(1-simulation.to.estimate$e)))  )
+      term.E <- - - mean( (1 - simulation.to.estimate$A) * (simulation.to.estimate$Y - simulation.to.estimate$mu_0) * ((1/ (1 - e.hat)) - (1/ (1 - simulation.to.estimate$e) ) )  )
       term.F <- mean( (1-simulation.to.estimate$A) * (mu.hat.0-simulation.to.estimate$mu_0) * ((1/(1-e.hat)) - (1/(1-simulation.to.estimate$e)))  )
       
       W <- simulation.to.estimate$A

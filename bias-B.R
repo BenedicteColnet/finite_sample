@@ -12,14 +12,14 @@ source("estimators.R")
 source("generate_data_models.R")
 
 results <- data.frame("sample.size" = c(),
-                     "bias.mu.1" = c(),
-                     "bias.mu.0" = c(),
-                     "bias.e" = c(),
-                     "term.A" = c(),
-                     "term.B" = c(),
-                     "term.C" = c(),
-                     "AIPW" = c(),
-                     "subset" = c())
+                      "bias.mu.1" = c(),
+                      "bias.mu.0" = c(),
+                      "bias.e" = c(),
+                      "term.A" = c(),
+                      "term.B" = c(),
+                      "term.C" = c(),
+                      "AIPW" = c(),
+                      "subset" = c())
 
 different_subset_tested <- c("extended",
                              "smart",
@@ -30,7 +30,7 @@ for (sample.size in c(100, 300, 1000, 3000, 10000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:50){
     # generate a simulation
-    simulation <- generate_simulation_wager_nie(n = sample.size, setup = "A")
+    simulation <- generate_simulation_wager_nie(n = sample.size, setup = "B")
     
     # choose subset
     for (method in different_subset_tested){
@@ -46,7 +46,7 @@ for (sample.size in c(100, 300, 1000, 3000, 10000)){
       } else {
         stop("error in subset.")
       }
-    
+      
       # fit models
       outcome.model.treated <-  regression_forest(X = simulation[simulation$A == 1, X_outcome], 
                                                   Y = simulation[simulation$A == 1, "Y"], 
@@ -64,7 +64,7 @@ for (sample.size in c(100, 300, 1000, 3000, 10000)){
       
       
       # prediction and estimation
-      simulation.to.estimate <- generate_simulation_wager_nie(n = 100000, setup = "A", all_covariates_output = TRUE)
+      simulation.to.estimate <- generate_simulation_wager_nie(n = 100000, setup = "B", all_covariates_output = TRUE)
       mu.hat.1 <- predict(outcome.model.treated, simulation.to.estimate[, X_outcome])$predictions
       bias.mu.1 <- mean(mu.hat.1-simulation.to.estimate$mu_1)
       mu.hat.0 <- predict(outcome.model.control, simulation.to.estimate[, X_outcome])$predictions
@@ -104,5 +104,5 @@ for (sample.size in c(100, 300, 1000, 3000, 10000)){
   }
 }
 
-write.csv(x=results, file="./data/b_A.csv")
+write.csv(x=results, file="./data/b_B.csv")
 
