@@ -67,6 +67,28 @@ for (sample.size in c(100, 300, 1000, 3000, 10000, 30000, 100000)){
       } else if (method == "smart"){
         X_treatment <- paste0("X.", 1:2)
         X_outcome <- paste0("X.", 1:6)
+        
+        
+        estimate.two.steps <- aipw_two_steps(X_treatment, 
+                                             X_outcome,
+                                             dataframe = a_simulation,
+                                             min.node.size.if.forest = 1)
+        
+        new.row <- data.frame("sample.size" = sample.size,
+                              "estimate" = estimate.two.steps,
+                              "estimator" = "aipw - two steps",
+                              "subset" = method,
+                              "nuisance" = "forest",
+                              "term.A" = NA, 
+                              "term.B" = NA, 
+                              "term.C" = NA,
+                              "term.D" = NA, 
+                              "term.E" = NA, 
+                              "term.F" = NA)
+        
+        results.linear <- rbind(results.linear, new.row)
+        
+        
       } else if (method == "minimal"){
         X_treatment <- paste0("X.", 1:2)
         X_outcome <- paste0("X.", 1:2)
