@@ -376,6 +376,84 @@ causal_forest_wrapper <- function(covariates_names_vector,
   return(forest.ate[[1]])
 }
 
+# Two steps AIPW
+aipw_two_steps <- function(covariates_names_vector_treatment, 
+                           covariates_names_vector_outcome,
+                           dataframe,
+                           outcome_name = "Y",
+                           treatment_name = "A",
+                           n.folds = 2,
+                           min.node.size.if.forest = 1) {
+  
+  n <- nrow(dataframe)
+  
+  t0 = rep(0, n)
+  t1 = rep(1, n)
+  
+  X_t <- dataframe[, covariates_names_vector_treatment]
+  X_o <- dataframe[, covariates_names_vector_treatment]
+  W <- dataframe[, treatment_name]
+  Y <- dataframe[, outcome_name]
+  
+  xt <- cbind(X_o, W)
+  xt0 <- cbind(X_o)
+  xt1 <- cbind(X_o)
+  
+  mu.hat.1 <- rep(NA, n)
+  mu.hat.0 <- rep(NA, n)
+  e.hat <- rep(NA, n)
+  
+  if (n.folds > 1){
+    indices <- split(seq(n), sort(seq(n) %% n.folds))
+    
+    # cross-fitting of nuisance parameters
+    for (idx in indices) {
+      
+      
+      # Estimation
+      propensity.model <- probability_forest(dataframe[-idx, covariates_names_vector_treatment], 
+                                             as.factor(W[-idx]), 
+                                             num.trees = 1000, 
+                                             min.node.size=min.node.size.if.forest)
+      
+      outcome.model.treated <- regression_forest(X = dataframe[-idx & dataframe[,treatment_name] == 1, covariates_names_vector_treatment], 
+                                                 Y = dataframe[-idx & dataframe[,treatment_name] == 1, outcome_name], 
+                                                 num.trees = 1000, 
+                                                 min.node.size = min.node.size.if.forest)
+      
+      outcome.model.control <- regression_forest(X = dataframe[-idx & dataframe[,treatment_name] == 0, covariates_names_vector_treatment], 
+                                                 Y = dataframe[-idx & dataframe[,treatment_name] == 0, outcome_name], 
+                                                 num.trees = 1000, 
+                                                 min.node.size = min.node.size.if.forest)
+      
+      
+      # Prediction
+      mu.hat.1[idx] <- predict(outcome.model.treated, newdata = xt1[idx,])$predictions
+      mu.hat.0[idx] <- predict(outcome.model.control, newdata = xt0[idx,])$predictions
+      e.hat[idx] <- predict(propensity.model, newdata = X_t[idx,])$predictions[,2]
+      
+    }
+    
+  } else if (n.folds == 0 | n.folds == 1){
+    stop("not implemented yet")
+    
+  } else {
+    stop("n.fold must be a positive integer")
+  }
+  
+  
+  final.data.treated <- dataframe[, c(covariates_names_vector_outcome, treatment_name)]
+  final.data.control <- dataframe[, c(covariates_names_vector_outcome, treatment_name)]
+  final.data.control$Y <- mu.hat.0
+  final.data.treated$Y <- mu.hat.1
+  final.data <- rbind(final.data.treated, final.data.control)
+  
+  lm.model <- lm(Y ~ ., data = final.data)
+  estimate <- lm.model$coefficients["A"]
+  
+  return(estimate)
+}
+
 tmle_wrapper <- function(covariates_names_vector, 
                          dataframe,
                          outcome_name = "Y",
