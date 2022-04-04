@@ -442,11 +442,14 @@ aipw_two_steps <- function(covariates_names_vector_treatment,
   }
   
   
-  final.data.treated <- dataframe[, c(covariates_names_vector_outcome, treatment_name)]
-  final.data.control <- dataframe[, c(covariates_names_vector_outcome, treatment_name)]
-  final.data.control$Y <- mu.hat.0
-  final.data.treated$Y <- mu.hat.1
-  final.data <- rbind(final.data.treated, final.data.control)
+  ## AIPW
+  m1 <- (W / e.hat) * (Y -  mu.hat.1) + mu.hat.1 
+  m0 <- ((1-W) / (1-e.hat)) * (Y -  mu.hat.0) + mu.hat.0
+  final.data <- dataframe[, c(covariates_names_vector_outcome, treatment_name)]
+  final.data$m1 <- m1
+  final.data$m0 <- m0
+  final.data$Y <- ifelse(final.data$W == 1, m1, m0)
+  final.data <- final.data[, c(setdiff(covariates_names_vector_outcome, covariates_names_vector_treatment), treatment_name, "Y")]
   
   lm.model <- lm(Y ~ ., data = final.data)
   estimate <- lm.model$coefficients["A"]
