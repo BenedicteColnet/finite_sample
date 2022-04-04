@@ -448,11 +448,11 @@ aipw_two_steps <- function(covariates_names_vector_treatment,
   final.data <- dataframe[, c(covariates_names_vector_outcome, treatment_name)]
   final.data$m1 <- m1
   final.data$m0 <- m0
-  final.data$Y <- ifelse(final.data$W == 1, final.data$m1, final.data$m0)
+  final.data$Y <- ifelse(final.data[, treatment_name] == 1, final.data$m1, final.data$m0)
   final.data <- final.data[, c(setdiff(covariates_names_vector_outcome, covariates_names_vector_treatment), treatment_name, "Y")]
   
   lm.model <- lm(Y ~ ., data = final.data)
-  estimate <- lm.model$coefficients["A"]
+  estimate <- lm.model$coefficients[treatment_name]
   
   return(estimate)
 }
