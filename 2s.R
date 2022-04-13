@@ -48,14 +48,17 @@ for (sample.size in c(100, 300, 1000, 3000, 10000)){
       a_simulation <- generate_simulation_wager_nie(n = sample.size, setup = wager, all_covariates_output = TRUE)
       
       
-      estimate.two.steps <- aipw_two_steps(X_treatment, 
-                                           X_outcome,
-                                           dataframe = a_simulation,
-                                           min.node.size.if.forest = 1)
+      estimate.two.steps <- aipw_forest(X_treatment, 
+                  X_outcome, 
+                  dataframe = a_simulation,
+                  min.node.size.if.forest = 1,
+                  n.folds = 0,
+                  return.decomposition = TRUE,
+                  with.weights = TRUE)
       
       new.row <- data.frame("sample.size" = sample.size,
                             "estimate" = estimate.two.steps,
-                            "estimator" = "aipw - two steps",
+                            "estimator" = "aipw - full",
                             "subset" = "smart",
                             "nuisance" = "forest",
                             "term.A" = NA, 
