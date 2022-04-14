@@ -49,17 +49,30 @@ for (sample.size in c(100, 300, 1000, 3000, 10000)){
       
       
       estimate.two.steps <- aipw_forest(X_treatment, 
-                  X_outcome, 
+                                        X_treatment, 
                   dataframe = a_simulation,
-                  min.node.size.if.forest = 1,
+                  min.node.size.if.forest = 0,
                   n.folds = 0,
                   return.decomposition = TRUE,
                   with.weights = TRUE)
       
       new.row <- data.frame("sample.size" = sample.size,
-                            "estimate" = estimate.two.steps,
+                            "estimate" = estimate.two.steps["aipw"][[1]],
                             "estimator" = "aipw - full",
-                            "subset" = "smart",
+                            "subset" = "minimal",
+                            "nuisance" = "forest",
+                            "term.A" = NA, 
+                            "term.B" = NA, 
+                            "term.C" = NA,
+                            "term.D" = NA, 
+                            "term.E" = NA, 
+                            "term.F" = NA,
+                            "setup" = wager)
+      
+       new.row.gformula <- data.frame("sample.size" = sample.size,
+                            "estimate" = estimate.two.steps["t.learner"][[1]],
+                            "estimator" = "gformula - full",
+                            "subset" = "minimal",
                             "nuisance" = "forest",
                             "term.A" = NA, 
                             "term.B" = NA, 
