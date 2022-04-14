@@ -51,7 +51,7 @@ for (sample.size in c(100, 300, 1000, 3000, 10000)){
       estimate.two.steps <- aipw_forest(X_treatment, 
                                         X_treatment, 
                   dataframe = a_simulation,
-                  min.node.size.if.forest = 0,
+                  min.node.size.if.forest = 1,
                   n.folds = 0,
                   return.decomposition = TRUE,
                   with.weights = TRUE)
@@ -82,7 +82,7 @@ for (sample.size in c(100, 300, 1000, 3000, 10000)){
                             "term.F" = NA,
                             "setup" = wager)
       
-      results.linear <- rbind(results.linear, new.row)
+      results.linear <- rbind(results.linear, new.row, new.row.gformula)
       
     }
   }
