@@ -81,8 +81,21 @@ for (sample.size in c(100, 300, 1000, 3000, 10000)){
                             "term.E" = NA, 
                             "term.F" = NA,
                             "setup" = wager)
+       
+       new.row.ipw <- data.frame("sample.size" = sample.size,
+                                      "estimate" = estimate.two.steps["ipw"][[1]],
+                                      "estimator" = "ipw",
+                                      "subset" = "minimal",
+                                      "nuisance" = "forest",
+                                      "term.A" = NA, 
+                                      "term.B" = NA, 
+                                      "term.C" = NA,
+                                      "term.D" = NA, 
+                                      "term.E" = NA, 
+                                      "term.F" = NA,
+                                      "setup" = wager)
       
-      results.linear <- rbind(results.linear, new.row, new.row.gformula)
+      results.linear <- rbind(results.linear, new.row, new.row.gformula, new.row.ipw)
       
     }
   }
