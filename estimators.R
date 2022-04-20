@@ -361,6 +361,34 @@ aipw_logit <- function(covariates_names_vector_treatment,
   
 }
 
+binned_ipw <- function(covariates_names_vector, 
+                       dataframe,
+                       outcome_name = "Y",
+                       treatment_name = "A",
+                       nb.bin = 10){
+  
+  # better have a data driven number of bins?
+  for (covariate.name in covariates_names_vector){
+    covariate <- simulation[, covariate.name]
+    
+    # if continuous
+    if(any(as.integer(covariate) != covariate) || length(unique(covariate)) > 2){
+      deciles <- quantcut(covariate, seq(0, 1, by = 1/nb.bin))
+      simulation[, covariate.name] <- as.factor(deciles)
+    }
+  }
+  
+  
+  e.hat <- simulation %>% 
+    group_by(across(covariates_names_vector)) %>%
+    summarise(e.hat = mean(A))
+  
+  
+  final <- simulation
+  final <- merge(final, e.hat, by = covariates_names_vector)
+  gamma <- ((final$Y * final$A)/final$e.hat) - ((final$Y * (1-final$A))/(1-final$e.hat))
+  return(mean(gamma, na.rm = TRUE))
+}
 
 causal_forest_wrapper <- function(covariates_names_vector, 
                                   dataframe,
