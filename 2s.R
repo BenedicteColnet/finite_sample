@@ -3,6 +3,8 @@ set.seed(123)
 
 # Libraries
 library(dplyr) # case_when and others
+# Suppress summarise info
+options(dplyr.summarise.inform = FALSE)
 library(ggplot2)
 library(tidyr) # pivot
 library(grf)
