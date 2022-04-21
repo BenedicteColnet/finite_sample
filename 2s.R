@@ -40,7 +40,7 @@ different_subset_tested <- c("extended",
 X_treatment <- paste0("X.", 1:2)
 X_outcome <- paste0("X.", 1:6)
 
-for (sample.size in c(50, 100, 300, 1000, 3000, 10000)){
+for (sample.size in c(100, 300, 1000, 3000, 10000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:50){
     
@@ -55,6 +55,9 @@ for (sample.size in c(50, 100, 300, 1000, 3000, 10000)){
                                        dataframe = a_simulation,
                                        nb.bin = 10)
       
+      estimate.cf <- causal_forest_wrapper(X_treatment, 
+                                           dataframe = a_simulation)
+      
       new.row <- data.frame("sample.size" = sample.size,
                             "estimate" = estimate.two.steps,
                             "estimator" = "ipw - bin",
@@ -68,8 +71,21 @@ for (sample.size in c(50, 100, 300, 1000, 3000, 10000)){
                             "term.F" = NA,
                             "setup" = wager)
       
+      new.row.bis <- data.frame("sample.size" = sample.size,
+                            "estimate" = estimate.cf,
+                            "estimator" = "causal forest",
+                            "subset" = "minimal",
+                            "nuisance" = "forest",
+                            "term.A" = NA, 
+                            "term.B" = NA, 
+                            "term.C" = NA,
+                            "term.D" = NA, 
+                            "term.E" = NA, 
+                            "term.F" = NA,
+                            "setup" = wager)
       
-      results.linear <- rbind(results.linear, new.row)
+      
+      results.linear <- rbind(results.linear, new.row, new.row.bis)
       
     }
   }
