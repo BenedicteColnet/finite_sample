@@ -53,7 +53,7 @@ for (sample.size in c(100, 300, 1000, 3000, 10000)){
       
       estimate.two.steps <- binned_ipw(X_treatment, 
                                        dataframe = a_simulation,
-                                       nb.bin = 20)
+                                       nb.bin = 50)
       
       new.row <- data.frame("sample.size" = sample.size,
                             "estimate" = estimate.two.steps,
