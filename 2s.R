@@ -40,7 +40,7 @@ different_subset_tested <- c("extended",
 X_treatment <- paste0("X.", 1:2)
 X_outcome <- paste0("X.", 1:6)
 
-for (sample.size in c(100, 300, 1000, 3000, 10000)){
+for (sample.size in c(50, 100, 300, 1000, 3000, 10000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:50){
     
