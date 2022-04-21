@@ -13,6 +13,7 @@ library(mvtnorm) # rmvnorm
 library(tmle)
 library(SuperLearner)
 library(AIPW)
+library(gtools) # quantcut
 
 source("estimators.R")
 source("generate_data_models.R")
