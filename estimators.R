@@ -369,22 +369,22 @@ binned_ipw <- function(covariates_names_vector,
   
   # better have a data driven number of bins?
   for (covariate.name in covariates_names_vector){
-    covariate <- simulation[, covariate.name]
+    covariate <- dataframe[, covariate.name]
     
     # if continuous
     if(any(as.integer(covariate) != covariate) || length(unique(covariate)) > 2){
       deciles <- quantcut(covariate, seq(0, 1, by = 1/nb.bin))
-      simulation[, covariate.name] <- as.factor(deciles)
+      dataframe[, covariate.name] <- as.factor(deciles)
     }
   }
   
   
-  e.hat <- simulation %>% 
+  e.hat <- dataframe %>% 
     group_by(across(covariates_names_vector)) %>%
     summarise(e.hat = mean(A))
   
   
-  final <- simulation
+  final <- dataframe
   final <- merge(final, e.hat, by = covariates_names_vector)
   gamma <- ((final$Y * final$A)/final$e.hat) - ((final$Y * (1-final$A))/(1-final$e.hat))
   return(mean(gamma, na.rm = TRUE))
