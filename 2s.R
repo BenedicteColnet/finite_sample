@@ -48,19 +48,15 @@ for (sample.size in c(100, 300, 1000, 3000, 10000)){
       a_simulation <- generate_simulation_wager_nie(n = sample.size, setup = wager, all_covariates_output = TRUE)
       
       
-      estimate.two.steps <- aipw_forest(X_treatment, 
-                                        X_treatment, 
-                  dataframe = a_simulation,
-                  min.node.size.if.forest = 1,
-                  n.folds = 0,
-                  return.decomposition = TRUE,
-                  with.weights = TRUE)
+      estimate.two.steps <- binned_ipw(X_treatment, 
+                                       dataframe = a_simulation,
+                                       nb.bin = 20)
       
       new.row <- data.frame("sample.size" = sample.size,
-                            "estimate" = estimate.two.steps["aipw"][[1]],
-                            "estimator" = "aipw - full",
+                            "estimate" = estimate.two.steps,
+                            "estimator" = "ipw - bin",
                             "subset" = "minimal",
-                            "nuisance" = "forest",
+                            "nuisance" = NA,
                             "term.A" = NA, 
                             "term.B" = NA, 
                             "term.C" = NA,
@@ -69,33 +65,8 @@ for (sample.size in c(100, 300, 1000, 3000, 10000)){
                             "term.F" = NA,
                             "setup" = wager)
       
-       new.row.gformula <- data.frame("sample.size" = sample.size,
-                            "estimate" = estimate.two.steps["t.learner"][[1]],
-                            "estimator" = "gformula - full",
-                            "subset" = "minimal",
-                            "nuisance" = "forest",
-                            "term.A" = NA, 
-                            "term.B" = NA, 
-                            "term.C" = NA,
-                            "term.D" = NA, 
-                            "term.E" = NA, 
-                            "term.F" = NA,
-                            "setup" = wager)
-       
-       new.row.ipw <- data.frame("sample.size" = sample.size,
-                                      "estimate" = estimate.two.steps["ipw"][[1]],
-                                      "estimator" = "ipw",
-                                      "subset" = "minimal",
-                                      "nuisance" = "forest",
-                                      "term.A" = NA, 
-                                      "term.B" = NA, 
-                                      "term.C" = NA,
-                                      "term.D" = NA, 
-                                      "term.E" = NA, 
-                                      "term.F" = NA,
-                                      "setup" = wager)
       
-      results.linear <- rbind(results.linear, new.row, new.row.gformula, new.row.ipw)
+      results.linear <- rbind(results.linear, new.row)
       
     }
   }
