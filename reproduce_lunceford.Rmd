@@ -24,16 +24,20 @@ set.seed(123)
 library(MASS)
 library(ggplot2)
 library(dplyr) # case_when and others
+
+# Suppress summarise info
+options(dplyr.summarise.inform = FALSE)
 library(geex)
 library(mvtnorm)
 library(wesanderson) # colors
+library(gtools) # quantcut
 ```
 
 Lunceford & Davidian shows that:
 
 - The asymptotic variance of the oracle IPW is smaller than the IPW estimator when propensity scores are estimated with the data (assuming a known parametric model for the weights),
 - Asymptotic variance of the double-robust is smaller than IPW,
-- Asymptotic varianc of the double-robust estimator is smaller when including outcome-related covariates $V$ in the nuisance models.
+- Asymptotic variance of the double-robust estimator is smaller when including outcome-related covariates $V$ in the nuisance models.
 
 We illustrate this counter-intuitive theoretical result with simulations following their.
 
@@ -84,11 +88,16 @@ oracle_ipw <- function(dataframe){
 
 ```
 
+
+
 ```{r}
 simulation <- generate_lunceford(n = 5000, return_oracles = TRUE)
 ggplot(simulation, aes(x = e)) +
   geom_histogram()
 ```
+
+
+
 ```{r}
 # Naive ATE
 big.simulation <- generate_lunceford(n = 50000, return_oracles = FALSE)
@@ -154,14 +163,18 @@ for (i in 1:500){
            + A / e.hat.ext * (Y -  mu.hat.1.ext)
            - (1 - A) / (1 - e.hat.ext) * (Y -  mu.hat.0.ext))
   
-  new_row <- data.frame("estimate" = c(estimates.oracle.ipw, mean(ipw), mean(ipw.ext), mean(aipw), mean(aipw.ext)),
-                        "method" = c("IPW oracle", "IPW - X", "IPW - X + V", "AIPW - X", "AIPW - X + V"))
+  tlearner <- mu.hat.1 - mu.hat.0
+  
+  tlearner.ext <-mu.hat.1.ext - mu.hat.0.ext
+  
+  new_row <- data.frame("estimate" = c(estimates.oracle.ipw, mean(ipw), mean(ipw.ext), mean(aipw), mean(aipw.ext), mean(tlearner), mean(tlearner.ext)),
+                        "method" = c("IPW oracle", "IPW - X", "IPW - X + V", "AIPW - X", "AIPW - X + V", "G-formula - X", "G-formula - X + V"))
   
   comparison.estimators <- rbind(comparison.estimators, new_row)
 }
 
 
-comparison.estimators$method <- factor(comparison.estimators$method, levels = c("IPW oracle", "IPW - X", "IPW - X + V", "AIPW - X", "AIPW - X + V"))
+comparison.estimators$method <- factor(comparison.estimators$method, levels = c("IPW oracle", "IPW - X", "IPW - X + V", "AIPW - X", "AIPW - X + V", "G-formula - X", "G-formula - X + V"))
 ```
 
 
@@ -178,7 +191,84 @@ ggplot(comparison.estimators, aes(x = method, y = estimate, fill = method)) +
   theme(axis.text = element_text(size=13, face = "bold"),
            axis.title.x = element_text(size=14, face = "bold")) +
   scale_fill_brewer(palette = "Accent") +
-  coord_flip()
-ggsave("./fig/lunceford.pdf", width = 5, height = 4)
+  coord_flip() +
+  ylim(0,5)
+ggsave("./fig/lunceford.pdf", width = 6, height = 5)
+```
+
+
+```{r}
+ggplot(comparison.estimators[comparison.estimators$method %in% c("IPW oracle", "IPW - X", "AIPW - X"),], aes(x = method, y = estimate, fill = method)) +
+  geom_boxplot(alpha = 0.9, show.legend = FALSE) +
+  theme_minimal() +
+  xlab("") +
+  ylab("ATE") +
+  geom_hline(yintercept = 2, linetype = "dashed", color = "red", alpha = 0.8, size = 0.8) +
+  theme(legend.title = element_blank(), legend.position = "bottom", 
+          legend.box = "horizontal", legend.text = element_text(size=10)) +
+  theme(axis.text = element_text(size=13, face = "bold"),
+           axis.title.x = element_text(size=14, face = "bold")) +
+  scale_fill_brewer(palette = "Accent") +
+  coord_flip() +
+  ylim(0,5)
+ggsave("./fig/lunceford_bis.pdf", width = 6, height = 5)
+```
+
+```{r}
+source("./estimators.R")
+```
+
+
+```{r}
+binned <- data.frame("estimate" = c(),
+                     "method" = c())
+
+
+for (i in 1:500){
+  simulation <- generate_lunceford(n = 1000, return_oracles = TRUE)
+  
+
+  ipw.10 <- binned_ipw(covariates_names_vector = paste0("X.", 1:3),
+                      dataframe =  simulation,
+                      nb.bin = 10)
+  ipw.20 <- binned_ipw(covariates_names_vector = paste0("X.", 1:3),
+                      dataframe =  simulation,
+                      nb.bin = 20)
+  ipw.30 <- binned_ipw(covariates_names_vector = paste0("X.", 1:3),
+                      dataframe =  simulation,
+                      nb.bin = 30)
+  ipw.40 <- binned_ipw(covariates_names_vector = paste0("X.", 1:3),
+                      dataframe =  simulation,
+                      nb.bin = 40)
+  
+  
+  new.row <- data.frame("estimate" = c(ipw.10, ipw.20, ipw.30, ipw.40),
+                     "method" = c("ipw.bin.10","ipw.bin.20","ipw.bin.30","ipw.bin.40"))
+  
+  binned <- rbind(binned, new.row)
+  
+}
+```
+
+
+
+```{r}
+binned <- rbind(binned, comparison.estimators[comparison.estimators$method %in% c("IPW oracle", "IPW - X", "AIPW - X"),])
+```
+
+```{r}
+ggplot(binned, aes(x = method, y = estimate, fill = method)) +
+  geom_boxplot(alpha = 0.9, show.legend = FALSE) +
+  theme_minimal() +
+  xlab("") +
+  ylab("ATE") +
+  geom_hline(yintercept = 2, linetype = "dashed", color = "red", alpha = 0.8, size = 0.8) +
+  theme(legend.title = element_blank(), legend.position = "bottom", 
+          legend.box = "horizontal", legend.text = element_text(size=10)) +
+  theme(axis.text = element_text(size=13, face = "bold"),
+           axis.title.x = element_text(size=14, face = "bold")) +
+  scale_fill_brewer(palette = "Accent") +
+  coord_flip() +
+  ylim(0,5)
 ```
 
