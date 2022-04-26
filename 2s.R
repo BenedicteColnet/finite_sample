@@ -71,7 +71,7 @@ for (sample.size in c(100, 300, 1000, 3000, 10000)){
       
       new.row <- data.frame("sample.size" = rep(sample.size, 5),
                             "estimate" = c(ipw.5, ipw.10, ipw.20, ipw.30, ipw.40),
-                            "estimator" = paste0("ipw.bin.", c("5" "10", "20", "30", "40")),
+                            "estimator" = paste0("ipw.bin.", c("5", "10", "20", "30", "40")),
                             "subset" = rep("minimal", 5),
                             "nuisance" = rep("forest", 5),
                             "term.A" = rep(NA, 5), 
