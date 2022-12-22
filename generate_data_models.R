@@ -40,28 +40,36 @@ generate_simulation_wager_nie <- function(n = 1000, p = 12, setup = "D", all_cov
   # set-ups
   if (setup == "A"){
     X = matrix(runif(n*p, min=0, max=1), n, p)
-    b = sin(pi * X[,1] * X[,2]) + 4 * (X[,3] - 0.5)^2 
-    + ifelse(X[,4] > 0, 3, -3) 
-    + ifelse(X[,5] > 0 & X[,6] < 0, 10, 20)
-    + 3*pmax(X[,6], 1)
+    b = 3*sin(pi * X[,1] * X[,2]) + 4 * (X[,3] - 0.5)^2 -5*cos(pi * X[,4] * X[,5]) + 2 * (X[,6] - 0.5)^2
+    + ifelse(X[,7] > 0, 3, -3) 
+    + ifelse(X[,8] > 0 & X[,9] < 0, 10, 20)
+    + 3*pmax(X[,10], 0.4)
+    + 0.4*log(1+X[,11]+X[,12])
     eta = 0.1
-    e = pmax(eta, pmin(sin(pi * X[,1] * X[,2]), 1-eta))
-    tau = (X[,1] + X[,2]) / 2
+    e = pmax(0.5*X[,6], pmin(sin(pi * X[,1] * X[,2] * X[,3] * X[,4] * X[,5]), 1-eta))
+    tau = (X[,1] + X[,2]) / 2 + (1+1.4*X[,7])^2
+  
   } else if (setup == "B"){
+    
     X = matrix(rnorm(n * p), n, p)
-    b = pmax(0, X[,1] + X[,2]) + pmax(0, X[,4] + X[,6]) + 0.5 * X[,5] + 2 * X[,6] 
-    e = 0.5
-    tau = X[,2] + log(1 + exp(X[,3]))
+    b = pmax(0, X[,1] + X[,2]) + pmax(0, X[,3] + X[,4]) + 0.5 * X[,5] + 0.4 * X[,6]^3 + 4*sin(pi * X[,7] * X[,8]) + X[,9] - X[,10]
+    e = 1/(1 + exp(-2 - 0.8*(-X[,1] - X[,2] - X[,3] - X[,4] - X[,5] - X[,6])))
+    tau = X[,11] + log(1 + exp(X[,12]))
+    
   } else if (setup == "C") {
+    
     X = matrix(rnorm(n * p), n, p)
-    b = 2 * log(1 + exp(X[,1] + X[,2]))+ X[,3] + X[,4] + 0.5 * X[,5] + 2 * X[,6] 
-    e = 1/(1 + exp(X[,1] + X[,2]))
-    tau = rep(3, n)
+    b = 2 * log(1 + exp(X[,1] + X[,2])) + X[,3] + X[,4] + 0.5 * X[,5] + 2 * X[,6] + X[,7]*X[,8] + log(pmax(1, X[,9]) + pmax(4, X[,10] + pmax(1, X[,11])))
+    e = 1/(1 + exp(X[,1] + X[,2] + X[,3] + X[,4] + X[,5] + X[,6]))
+    tau = rep(10, n) + X[,12]
+    
   } else if (setup == "D") {
+    
     X = matrix(rnorm(n*p), n, p)
-    b = (pmax(X[,1] + X[,2] + X[,3], 0) + pmax(X[,4] + X[,5], 0)) / 2 + X[,4] + 0.5 * X[,5] + 2 * X[,6]
-    e = 1/(1 + exp(-X[,1]) + exp(-X[,2]))
+    b = (pmax(X[,1] + X[,2] + X[,3], 0) + pmax(X[,4] + X[,5], 0)) / 2 + X[,4] + 0.5 * X[,5] + 2 * X[,6] + 4*(X[,7] +  X[,8] +  X[,9] +  X[,10] + X[,11] +  X[,12])
+    e = pmin(sin(pi*X[,6]), 1/(1 + exp(-X[,1]) + exp(-X[,2]) + exp(-X[,3]) + exp(-X[,4]) + exp(-X[,5])))
     tau = pmax(X[,1] + X[,2], 0) - pmax(X[,3] + X[,4] + X[,5], 0)
+    
   } else {
     print("error in setup")
     break
