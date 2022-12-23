@@ -71,15 +71,14 @@ t_learner_forest <- function(covariates_names,
 
 ### Custom AIPW with forest 
 
+# custom AIPW with forest
 aipw_forest <- function(covariates_names_vector_treatment, 
                         covariates_names_vector_outcome,
                         dataframe,
                         outcome_name = "Y",
                         treatment_name = "A",
                         n.folds = 2,
-                        use.ranger = TRUE,
-                        min.node.size.if.forest = 5, #like in grf package and in particular causal forests
-                        number.of.trees = 200, #like in grf package and in particular causal forests
+                        min.node.size.if.forest = 1,
                         return.decomposition = FALSE) {
   
   n <- nrow(dataframe)
@@ -106,66 +105,27 @@ aipw_forest <- function(covariates_names_vector_treatment,
     # cross-fitting of nuisance parameters
     for (idx in indices) {
       
-      if(use.ranger){
-        
-        fmla_treatment <- formula(paste0(treatment_name, '~.'))
-        fmla_outcome <- formula(paste0(outcome_name, '~.'))
-        
-        ## Propensity model
-        propensity.model <- ranger(fmla_treatment, 
-                                   data = dataframe[-idx, c(covariates_names_vector_treatment, treatment_name)], 
-                                   num.trees = number.of.trees, 
-                                   min.node.size = min.node.size.if.forest)
-        
-        
-        ## Outcome model
-        outcome.model.treated <- ranger(fmla_outcome, 
-                                        data = dataframe[-idx & dataframe[,treatment_name] == 1, c(covariates_names_vector_treatment, outcome_name)], 
-                                        num.trees = number.of.trees, 
-                                        min.node.size = min.node.size.if.forest)
-        
-        outcome.model.control <- ranger(fmla_outcome, 
-                                        data = dataframe[-idx & dataframe[,treatment_name] == 0, c(covariates_names_vector_treatment, outcome_name)], 
-                                        num.trees = number.of.trees, 
-                                        min.node.size = min.node.size.if.forest)
-        
-
-       
-        
-        # Prediction for hold out set
-        mu.hat.1[idx] <- predict(outcome.model.treated, data = xt1[idx,])$predictions
-        mu.hat.0[idx] <- predict(outcome.model.control, data = xt0[idx,])$predictions
-        e.hat[idx] <- predict(propensity.model, data = X_t[idx,])$predictions
-        
-      } else {
-        
-        
-        ## Propensity model
-        propensity.model <- probability_forest(dataframe[-idx, covariates_names_vector_treatment], 
-                                               as.factor(W[-idx]), 
-                                               num.trees = number.of.trees, 
-                                               min.node.size = min.node.size.if.forest)
-        
-        
-        
-        ## Outcome model
-        outcome.model.treated <- regression_forest(X = dataframe[-idx & dataframe[,treatment_name] == 1, covariates_names_vector_outcome], 
+      
+      # Estimation
+      propensity.model <- probability_forest(dataframe[-idx, covariates_names_vector_treatment], 
+                                             as.factor(W[-idx]), 
+                                             num.trees = 1000, 
+                                             min.node.size=min.node.size.if.forest)
+      
+      outcome.model.treated <- regression_forest(X = dataframe[-idx & dataframe[,treatment_name] == 1, covariates_names_vector_outcome], 
                                                    Y = dataframe[-idx & dataframe[,treatment_name] == 1, outcome_name], 
-                                                   num.trees = number.of.trees, 
+                                                   num.trees = 1000, 
                                                    min.node.size = min.node.size.if.forest)
         
-        outcome.model.control <- regression_forest(X = dataframe[-idx & dataframe[,treatment_name] == 0, covariates_names_vector_outcome], 
+      outcome.model.control <- regression_forest(X = dataframe[-idx & dataframe[,treatment_name] == 0, covariates_names_vector_outcome], 
                                                    Y = dataframe[-idx & dataframe[,treatment_name] == 0, outcome_name], 
-                                                   num.trees = number.of.trees, 
+                                                   num.trees = 1000, 
                                                    min.node.size = min.node.size.if.forest)
-        
-        
-        # Prediction for hold out set
-        mu.hat.1[idx] <- predict(outcome.model.treated, newdata = xt1[idx,])$predictions
-        mu.hat.0[idx] <- predict(outcome.model.control, newdata = xt0[idx,])$predictions
-        e.hat[idx] <- predict(propensity.model, newdata = X_t[idx,])$predictions[,2]
-        
-      }
+      
+      # Prediction
+      mu.hat.1[idx] <- predict(outcome.model.treated, newdata = xt1[idx,])$predictions
+      mu.hat.0[idx] <- predict(outcome.model.control, newdata = xt0[idx,])$predictions
+      e.hat[idx] <- predict(propensity.model, newdata = X_t[idx,])$predictions[,2]
       
     }
     
@@ -174,17 +134,17 @@ aipw_forest <- function(covariates_names_vector_treatment,
     # Estimation
     outcome.model.treated <- regression_forest(X = dataframe[ dataframe[,treatment_name] == 1, covariates_names_vector_outcome], 
                                                Y = dataframe[dataframe[,treatment_name] == 1, outcome_name], 
-                                               num.trees = number.of.trees, 
+                                               num.trees = 1000, 
                                                min.node.size = min.node.size.if.forest)
     
     outcome.model.control <- regression_forest(X = dataframe[dataframe[,treatment_name] == 0, covariates_names_vector_outcome], 
                                                Y = dataframe[dataframe[,treatment_name] == 0, outcome_name], 
-                                               num.trees = number.of.trees, 
+                                               num.trees = 1000, 
                                                min.node.size = min.node.size.if.forest)
     
     propensity.model <- probability_forest(dataframe[, covariates_names_vector_treatment], 
                                            as.factor(W), 
-                                           num.trees = number.of.trees, 
+                                           num.trees=1000, 
                                            min.node.size=min.node.size.if.forest)
     
     # Prediction
@@ -195,7 +155,7 @@ aipw_forest <- function(covariates_names_vector_treatment,
   } else {
     stop("n.fold must be a positive integer")
   }
-
+  
   
   # compute estimates
   aipw = mean(mu.hat.1 - mu.hat.0
@@ -209,15 +169,13 @@ aipw_forest <- function(covariates_names_vector_treatment,
   
   if(!return.decomposition){
     res = c("ipw" = ipw, "t.learner" = g_formula, "aipw" = aipw)
-    
   } else {
-    
-    # warning, this loop requires the dataframe to contain extra-info such as mu_1 and true e
     
     semi.oracle.aipw <- mean(dataframe$mu_1 - dataframe$mu_0
                              + W / e.hat * (Y -  dataframe$mu_1)
                              - (1 - W) / (1 - e.hat) * (Y -  dataframe$mu_0))
     
+    # warning, this loop requires the dataframe to contain extra-info such as mu_1 and true e
     term.A <- mean( (dataframe$mu_1 - mu.hat.1) * (1 - (dataframe$A /dataframe$e))  ) 
     term.B <- mean( dataframe$A * (dataframe$Y - dataframe$mu_1) * ((1/e.hat) - (1/dataframe$e))  )
     term.C <- - mean( dataframe$A * ( (1/e.hat) - (1/dataframe$e) ) * (mu.hat.1-dataframe$mu_1) )
@@ -233,8 +191,8 @@ aipw_forest <- function(covariates_names_vector_treatment,
   }
   
   
-  return(res)
   
+  return(res)
 }
 
 
@@ -408,7 +366,7 @@ tmle_wrapper <- function(covariates_names_vector,
                          dataframe,
                          outcome_name = "Y",
                          treatment_name = "A",
-                         n.folds = 5,
+                         n.folds = 2,
                          automate = FALSE,
                          sl_libs_outcome = c('SL.ranger'),
                          sl_libs_treatment = c('SL.ranger')){
