@@ -68,7 +68,6 @@ t_learner_forest <- function(covariates_names,
 #-------------
 
 
-
 ### Custom AIPW with forest 
 
 # custom AIPW with forest
@@ -78,6 +77,7 @@ aipw_forest <- function(covariates_names_vector_treatment,
                         outcome_name = "Y",
                         treatment_name = "A",
                         n.folds = 2,
+                        outcome_nature = "continuous",
                         min.node.size.if.forest = 1,
                         return.decomposition = FALSE) {
   
@@ -112,19 +112,58 @@ aipw_forest <- function(covariates_names_vector_treatment,
                                              num.trees = 1000, 
                                              min.node.size=min.node.size.if.forest)
       
-      outcome.model.treated <- regression_forest(X = dataframe[-idx & dataframe[,treatment_name] == 1, covariates_names_vector_outcome], 
+      
+      if(outcome_nature == "continuous"){
+        
+        
+        outcome.model.treated <- regression_forest(X = dataframe[-idx & dataframe[,treatment_name] == 1, covariates_names_vector_outcome], 
                                                    Y = dataframe[-idx & dataframe[,treatment_name] == 1, outcome_name], 
                                                    num.trees = 1000, 
                                                    min.node.size = min.node.size.if.forest)
         
-      outcome.model.control <- regression_forest(X = dataframe[-idx & dataframe[,treatment_name] == 0, covariates_names_vector_outcome], 
+        outcome.model.control <- regression_forest(X = dataframe[-idx & dataframe[,treatment_name] == 0, covariates_names_vector_outcome], 
                                                    Y = dataframe[-idx & dataframe[,treatment_name] == 0, outcome_name], 
                                                    num.trees = 1000, 
                                                    min.node.size = min.node.size.if.forest)
+        
+        
+      } else if (outcome_nature == "binary"){
+        
+        
+        outcome.model.treated <- probability_forest(X = dataframe[-idx & dataframe[,treatment_name] == 1, covariates_names_vector_outcome], 
+                                                   Y =  as.factor(dataframe[-idx & dataframe[,treatment_name] == 1, outcome_name]), 
+                                                   num.trees = 1000, 
+                                                   min.node.size = min.node.size.if.forest)
+        
+        outcome.model.control <- probability_forest(X = dataframe[-idx & dataframe[,treatment_name] == 0, covariates_names_vector_outcome], 
+                                                   Y =  as.factor(dataframe[-idx & dataframe[,treatment_name] == 0, outcome_name]), 
+                                                   num.trees = 1000, 
+                                                   min.node.size = min.node.size.if.forest)
+        
+        
+        
+      } else {
+        
+        print("Error, outcome_nature has to be continuous or binary")
+        break
+        
+      }
       
       # Prediction
-      mu.hat.1[idx] <- predict(outcome.model.treated, newdata = xt1[idx,])$predictions
-      mu.hat.0[idx] <- predict(outcome.model.control, newdata = xt0[idx,])$predictions
+      
+      if(outcome_nature == "continuous"){
+        
+        mu.hat.1[idx] <- predict(outcome.model.treated, newdata = xt1[idx,])$predictions
+        mu.hat.0[idx] <- predict(outcome.model.control, newdata = xt0[idx,])$predictions
+        
+      } else { 
+        
+        mu.hat.1[idx] <- predict(outcome.model.treated, newdata = xt1[idx, covariates_names_vector_outcome])$predictions[,2]
+        mu.hat.0[idx] <- predict(outcome.model.control, newdata = xt0[idx, covariates_names_vector_outcome])$predictions[,2]
+        
+      }
+      
+      
       e.hat[idx] <- predict(propensity.model, newdata = X_t[idx,])$predictions[,2]
       
     }
@@ -132,15 +171,38 @@ aipw_forest <- function(covariates_names_vector_treatment,
   } else if (n.folds == 0 | n.folds == 1){
     
     # Estimation
-    outcome.model.treated <- regression_forest(X = dataframe[ dataframe[,treatment_name] == 1, covariates_names_vector_outcome], 
-                                               Y = dataframe[dataframe[,treatment_name] == 1, outcome_name], 
-                                               num.trees = 1000, 
-                                               min.node.size = min.node.size.if.forest)
     
-    outcome.model.control <- regression_forest(X = dataframe[dataframe[,treatment_name] == 0, covariates_names_vector_outcome], 
-                                               Y = dataframe[dataframe[,treatment_name] == 0, outcome_name], 
-                                               num.trees = 1000, 
-                                               min.node.size = min.node.size.if.forest)
+    if(outcome_nature == "continuous"){
+      
+      outcome.model.treated <- regression_forest(X = dataframe[ dataframe[,treatment_name] == 1, covariates_names_vector_outcome], 
+                                                 Y = dataframe[dataframe[,treatment_name] == 1, outcome_name], 
+                                                 num.trees = 1000, 
+                                                 min.node.size = min.node.size.if.forest)
+      
+      outcome.model.control <- regression_forest(X = dataframe[dataframe[,treatment_name] == 0, covariates_names_vector_outcome], 
+                                                 Y = dataframe[dataframe[,treatment_name] == 0, outcome_name], 
+                                                 num.trees = 1000, 
+                                                 min.node.size = min.node.size.if.forest)
+      
+    } else if (outcome_nature == "binary"){
+      
+      outcome.model.treated <- probability_forest(X = dataframe[dataframe[,treatment_name] == 1, covariates_names_vector_outcome], 
+                                                  Y =  as.factor(dataframe[dataframe[,treatment_name] == 1, outcome_name]), 
+                                                  num.trees = 1000, 
+                                                  min.node.size = min.node.size.if.forest)
+      
+      outcome.model.control <- probability_forest(X = dataframe[dataframe[,treatment_name] == 0, covariates_names_vector_outcome], 
+                                                  Y =  as.factor(dataframe[dataframe[,treatment_name] == 0, outcome_name]), 
+                                                  num.trees = 1000, 
+                                                  min.node.size = min.node.size.if.forest)
+      
+    } else {
+      
+      print("Error, outcome_nature has to be continuous or binary")
+      break
+      
+    }
+    
     
     propensity.model <- probability_forest(dataframe[, covariates_names_vector_treatment], 
                                            as.factor(W), 
@@ -148,8 +210,19 @@ aipw_forest <- function(covariates_names_vector_treatment,
                                            min.node.size=min.node.size.if.forest)
     
     # Prediction
-    mu.hat.1 <- predict(outcome.model.treated, data = xt1)$predictions
-    mu.hat.0 <- predict(outcome.model.control, data = xt0)$predictions
+    
+    if(outcome_nature == "continuous"){
+      
+      mu.hat.1 <- predict(outcome.model.treated, data = xt1)$predictions
+      mu.hat.0 <- predict(outcome.model.control, data = xt0)$predictions
+      
+    } else {
+      
+      mu.hat.1 <- predict(outcome.model.treated, data = xt1)$predictions[,2]
+      mu.hat.0 <- predict(outcome.model.control, data = xt0)$predictions[,2]
+      
+    }
+    
     e.hat <- predict(propensity.model, data = X_t)$predictions[,2]
     
   } else {
