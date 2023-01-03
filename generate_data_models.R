@@ -332,3 +332,80 @@ generate_simulation_naimi_kennedy <- function(n = 1000, p = 6, all_covariates_ou
   return(simulation)
   
 }
+
+generate_simulation_zivich<- function(n = 1000,  all_covariates_output = TRUE){
+  # X 1:4 counfounder, but true information on outcome is X.5 (risk_score not in categorie)
+  
+  # Covariates
+  X.1 <- rtrapezoid(n, min = 40, mode1 = 40, mode2 = 60, max = 75) # Age 
+  X.2 <-  0.005 * X.1 + rnorm(1000, log(100), 0.18) # ldl_log 
+  X.3 <-  rbinom(n, 1, p=dlogis(-4.23 + 0.03 * X.2 - 0.02 * X.1 + 0.0009 * X.1 ** 2)) # diabetes 
+  
+  
+  inter.1 = dlogis(-5.5 + 0.05 * (X.1 - 20) + 0.001 * X.1 ** 2 + rnorm(n)) # frailty
+  inter.2 = log(X.1) #age_ln
+  X.5 = dlogis(4.299 + 3.501 * X.3 - 2.07 *inter.2 + 0.051 * inter.2**2 +  4.090 * X.2 - 1.04 * inter.2 * X.2 + 0.01 * inter.1) # risk_score
+  
+  
+  X.4 = ifelse(X.5 < .05, 0, NA) # risk_score_cat
+  X.4 = ifelse((X.5 >= .05) & (X.5 < .075), 1, X.4)
+  X.4 = ifelse((X.5 >= .075) & (X.5 < .2), 2, X.4)
+  X.4= ifelse(X.5 > .2, 3, X.4)
+  
+  
+  
+  # Treatment mechanism
+  e = dlogis(-3.471 + 1.390*X.3 
+             + 0.112*X.2 
+             + 0.973*ifelse(X.2 > log(160), 1, 0)
+             - 0.046*(X.1 - 30)
+             + 0.003*(X.1 - 30)**2 + 
+               0.273 * ifelse(X.4 == 1, 1, 0)
+             + 1.592 * ifelse(X.4 == 2, 1, 0)
+             + 2.641 * ifelse(X.4 == 3, 1, 0)
+  )
+  A = rbinom(n = n, 1, p = e)
+  
+  
+  # Potential outcomes
+  Y_1 = dlogis(-6.25
+               # Treatment effect
+               - 0.75
+               + 0.35 * ifelse(X.2 < log(130), 5-X.2, 0)
+               # Other effects
+               + 0.45 * (sqrt(X.1-39))
+               + 1.75 * X.3
+               + 0.29 * (exp(X.5+1))
+               + 0.14 * ifelse(X.2 > log(120), X.2**2, 0))
+  
+  
+  
+  Y_0 = dlogis(-6.25  + 0.45 * (sqrt(X.1-39))
+               + 1.75 * X.3
+               + 0.29 * (exp(X.5+1))
+               + 0.14 * ifelse(X.2 > log(120), X.2**2, 0))
+  
+  Y = ifelse(A == 1, Y_1, Y_0)  # causal consistency
+  Y = rbinom(n, 1, Y)
+  
+  simulation <- data.frame("X.1" = X.1,
+                           "X.2" = X.2,
+                           "X.3" = X.3,
+                           "X.4" = X.4,
+                           "X.5" = X.5,
+                           "Y_1" = Y_1,
+                           "Y_0" = Y_0,
+                           "e" = e,
+                           "A" = A,
+                           "Y" = Y)
+  
+  # return output
+  covariate.set = paste0("X.", 1:5)
+  if(all_covariates_output){
+    simulation <- simulation[, c(covariate.set, "A", "Y", "Y_1", "Y_0", "e")]
+    return(simulation)
+  } else {
+    simulation <- simulation[, c(covariate.set, "A", "Y")]
+    return(simulation)
+  }  
+}
