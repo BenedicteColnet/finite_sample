@@ -14,7 +14,7 @@ generate_simulation_wager_nie <- function(n = 1000, p = 6, setup = "D", all_cova
     
     X = matrix(rnorm(n * p), n, p)
     b = pmax(0, X[,1] + X[,2], X[,3]) + pmax(0, X[,4] + X[,5])
-    e = 1/(1 + exp( 1 -X[,1] - X[,2]))  # this part is changed
+    e = pmax(eta, pmin(sin(pi * X[,1] * X[,2]), 1-eta)) # this row only is changed
     tau = X[,1] + log(1 + exp(X[,2]))
     
   } else if (setup == "C") {
@@ -258,4 +258,77 @@ generate_simulation_leborgne_foucher <- function(n = 1000, setup = "simple", all
     simulation <- simulation[, c(covariate.set, "A", "Y")]
     return(simulation)
   }
+}
+
+
+generate_simulation_naimi_kennedy <- function(n = 1000, p = 6, all_covariates_output = FALSE){
+  
+  p = 4
+  n = 500
+  
+  expit <- function(x){ exp(x)/(1+exp(x)) }
+  logit <- function(x){ log(x/(1-x)) }
+  
+  
+  sigma<-matrix(0,nrow=p,ncol=p)
+  diag(sigma)<-1
+  x <- rmvnorm(n, mean=rep(0,p), sigma=sigma)
+  
+  z <- x
+  z[,1] <- exp(x[,1]/2)
+  z[,2] <- x[,2]/(1+exp(x[,1]))+10
+  z[,3] <- (x[,1]*x[,3]/25+.6)^3
+  z[,4] <- (x[,2]*x[,4]+20)^2
+  
+  # design matrix for outcome model
+  muMatT<-model.matrix(as.formula(paste("~(",paste("x[,",1:ncol(x),"]",collapse="+"),")")))
+  
+  parms3<-c(3.5,2.5,-1,5) #,4.25,-2
+  parms4<-c(log(2),log(2),log(.5),log(2)) #,log(2.25),log(.25)
+  
+  beta<-parms3;beta<-c(120,beta)
+  # design matrix for propensity score model
+  piMatT<-model.matrix(as.formula(paste("~(",paste("x[,",1:ncol(x),"]",collapse="+"),")")))
+  theta<-c(-.5,parms4)
+  mu <- muMatT%*%beta
+  # propensity score model
+  pi <- expit(piMatT%*%theta);
+  r<-1-rbinom(n,1,pi)
+  
+  Y_0 <- mu + rnorm(n,0,6)
+  Y_1 <- Y_0 + 6
+  
+  # correct specification
+  simulation <- data.frame("X.1" = z[,1],
+                           "X.2" = z[,2],
+                           "X.3" = z[,3],
+                           "X.4" = z[,4],
+                           "A" = r,
+                           "e" = pi,
+                           "Y_1" = Y_1,
+                           "Y_0" = Y_0,
+                           "mu_1" = mu + 6,
+                           "mu_0" = mu )
+  
+  
+  
+  simulation$Y <- ifelse(simulation$A == 1, simulation$Y_1, simulation$Y_0)
+  
+  # Modifications of the simulation to include precision covariates
+  simulation$X.5 = rbinom(n, 1, 0.1)
+  simulation$Y <- ifelse(simulation$X.5 == 1, simulation$Y, simulation$Y + 10)
+  
+  simulation$X.6 = rnorm(100, 0, 1)
+  simulation$Y <- ifelse(simulation$X.4 < 0, simulation$Y, simulation$Y + simulation$X.6^2)
+  
+  if(all_covariates_output){
+    simulation <- simulation[, c(paste0("X.", 1:6), "A", "Y", "Y_1", "mu_1", "Y_0", "mu_0", "e")]
+    return(simulation)
+  } else {
+    simulation <- simulation[, c(paste0("X.", 1:6), "A", "Y")]
+    return(simulation)
+  }
+  
+  return(simulation)
+  
 }

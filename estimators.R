@@ -4,9 +4,8 @@ ipw_forest <- function(covariates_names,
                         dataframe,
                         outcome_name = "Y",
                         treatment_name = "A",
-                        min.node.size.if.forest = 5, #like in grf package and in particular causal forests
-                        number.of.trees = 200, #like in grf package and in particular causal forests
-                        return.decomposition = FALSE) {
+                        min.node.size.if.forest = 1,
+                        number.of.trees = 1000) {
   
   n <- nrow(dataframe)
   Y = dataframe[, outcome_name]
@@ -441,8 +440,8 @@ tmle_wrapper <- function(covariates_names_vector,
                          treatment_name = "A",
                          n.folds = 2,
                          automate = FALSE,
-                         sl_libs_outcome = c('SL.ranger'),
-                         sl_libs_treatment = c('SL.ranger')){
+                         sl_libs_outcome = c('SL.ranger', "SL.glmnet", "SL.xgboost", "SL.glm", "SL.lm"),
+                         sl_libs_treatment = c('SL.ranger', "SL.glmnet", "SL.xgboost", "SL.glm", "SL.lm")){
   
   
   
@@ -455,4 +454,167 @@ tmle_wrapper <- function(covariates_names_vector,
                V = n.folds)
   
   return(TMLE$estimates$ATE$psi)
+}
+
+
+DoubleML_wrapper <- function(covariates_names_vector, 
+                             dataframe,
+                             outcome_name = "Y",
+                             treatment_name = "A",
+                             n.folds = 10,
+                             outcome_nature = "continuous"){
+  
+  
+  # suppress messages during fitting
+  lgr::get_logger("mlr3")$set_threshold("warn")
+  
+  # Initialize DoubleMLData (data-backend of DoubleML)
+  data_dml_base = DoubleMLData$new(dataframe,
+                                   y_col = outcome_name,
+                                   d_cols =treatment_name,
+                                   x_cols = covariates_names_vector)
+  
+  
+  # Trees
+  trees = lrn("regr.rpart", cp = 0.0047, minsplit = 203)
+  trees_class = lrn("classif.rpart", cp = 0.0042, minsplit = 104)
+  
+  dml_plr_tree = DoubleMLPLR$new(data_dml_base,
+                                 ml_l = trees,
+                                 ml_m = trees_class,
+                                 n_folds = n.folds)
+  dml_plr_tree$fit()
+  
+  
+  # Random Forest
+  mtry.est = floor(sqrt(length(covariates_names_vector)))
+  
+  if (outcome_nature == "continuous"){
+    randomForest_outcome = lrn("regr.ranger", max.depth = 100, mtry = mtry.est, min.node.size = 1)
+  } else if (outcome_nature == "binary"){
+    randomForest_outcome = lrn("classif.ranger", max.depth = 100, mtry = mtry.est, min.node.size = 1)
+  }
+  
+  randomForest_treatment = lrn("classif.ranger", max.depth = 100, mtry = mtry.est, min.node.size = 1)
+  
+  
+  dml_plr_forest = DoubleMLPLR$new(data_dml_base,
+                                   ml_l = randomForest_outcome,
+                                   ml_m = randomForest_treatment,
+                                   n_folds = 10)
+  dml_plr_forest$fit()
+  
+  
+  # Lasso
+  if (outcome_nature == "continuous"){
+    lasso_outcome = lrn("regr.cv_glmnet", nfolds = 10, s = "lambda.min")
+  } else if (outcome_nature == "binary"){
+    lasso_outcome = lrn("classif.cv_glmnet", nfolds = 10, s = "lambda.min")
+  }
+  
+  lasso_treatment = lrn("classif.cv_glmnet", nfolds = 10, s = "lambda.min")
+  
+  # Initialize DoubleMLPLR model
+  dml_plr_lasso = DoubleMLPLR$new(data_dml_base,
+                                  ml_l = lasso_outcome,
+                                  ml_m = lasso_treatment,
+                                  n_folds = 10)
+  dml_plr_lasso$fit()
+  
+  
+  # Boosted trees
+  if (outcome_nature == "continuous"){
+    boost_outcome = lrn("regr.xgboost", objective = "reg:squarederror", eta = 0.1, nrounds = 35)
+  } else if (outcome_nature == "binary"){
+    boost_outcome = lrn("classif.xgboost", objective = "binary:logistic", eval_metric = "logloss",eta = 0.1, nrounds = 34)
+  }
+
+  boost_treatment = lrn("classif.xgboost",
+                    objective = "binary:logistic", eval_metric = "logloss",
+                    eta = 0.1, nrounds = 34)
+  
+
+  dml_plr_boost = DoubleMLPLR$new(data_dml_base,
+                                  ml_l = boost_outcome,
+                                  ml_m = boost_treatment,
+                                  n_folds = 10)
+  dml_plr_boost$fit()
+  
+  
+  # Most general model with random forests
+  if (outcome_nature == "continuous"){
+    randomForest_outcome = lrn("regr.ranger")
+  } else if (outcome_nature == "binary"){
+    randomForest_outcome = llrn("classif.ranger")
+  }
+
+  randomForest_treatment = lrn("classif.ranger")
+  
+  dml_irm_forest = DoubleMLIRM$new(data_dml_base,
+                                   ml_g = randomForest_outcome,
+                                   ml_m = randomForest_treatment,
+                                   trimming_threshold = 0.01,
+                                   n_folds = n.folds)
+  
+  # Set nuisance-part specific parameters
+  dml_irm_forest$set_ml_nuisance_params("ml_g0", "A", list(max.depth = 100, mtry = mtry.est, min.node.size = 1))
+  
+  dml_irm_forest$fit()
+  
+  
+  confints = rbind(dml_plr_lasso$confint(), dml_plr_forest$confint(),
+                   dml_plr_tree$confint(), dml_plr_boost$confint(), dml_irm_forest$confint())
+  estimates = c(dml_plr_lasso$coef, dml_plr_forest$coef,
+                dml_plr_tree$coef, dml_plr_boost$coef, dml_irm_forest$coef)
+  result_plr = data.frame("model" = c(rep("PLR", 4),  "IRM"),
+                          "ML" = c("glmnet", "ranger", "rpart", "xgboost", "ranger"),
+                          "Estimate" = estimates,
+                          "lower" = confints[,1],
+                          "upper" = confints[,2])
+  return(result_plr)
+}
+
+
+# only compute the IRM with random forest
+DoubleML_wrapper_fast <- function(covariates_names_vector, 
+                             dataframe,
+                             outcome_name = "Y",
+                             treatment_name = "A",
+                             n.folds = 10,
+                             outcome_nature = "continuous"){
+  
+  
+  # Initialize DoubleMLData (data-backend of DoubleML)
+  data_dml_base = DoubleMLData$new(dataframe,
+                                   y_col = outcome_name,
+                                   d_cols =treatment_name,
+                                   x_cols = covariates_names_vector)
+  
+  # suppress messages during fitting
+  lgr::get_logger("mlr3")$set_threshold("warn")
+  
+  # compute an estimation of mtry
+  mtry.est = floor(sqrt(length(covariates_names_vector)))
+  
+  if (outcome_nature == "continuous"){
+    randomForest_outcome = lrn("regr.ranger")
+  } else if (outcome_nature == "binary"){
+    randomForest_outcome = lrn("classif.ranger")
+  }
+  
+  randomForest_treatment = lrn("classif.ranger")
+  
+  dml_irm_forest = DoubleMLIRM$new(data_dml_base,
+                                   ml_g = randomForest_outcome,
+                                   ml_m = randomForest_treatment,
+                                   trimming_threshold = 0.01,
+                                   n_folds = n.folds)
+  
+  # Set nuisance-part specific parameters with very deep trees
+  dml_irm_forest$set_ml_nuisance_params("ml_g0", "A", list(max.depth = 1000, mtry = mtry.est, min.node.size = 1))
+  
+  dml_irm_forest$fit()
+  
+  return(dml_irm_forest$coef[[1]])
+  
 }

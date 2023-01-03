@@ -34,21 +34,21 @@ for (sample.size in c(300, 1000, 3000, 10000)){
   for (i in 1:50){
     
     # generate a simulation
-    a_simulation <- generate_simulation_wager_nie(n = sample.size, setup = "A", all_covariates_output = TRUE)
+    a_simulation <- generate_simulation_wager_nie(n = sample.size, setup = "C", all_covariates_output = TRUE)
     
     # choose subset
     for (method in different_subset_tested){
       if (method == "extended"){
-        X_treatment <- paste0("X.", 1:5)
-        X_outcome <- paste0("X.", 1:5)
+        X_treatment <- paste0("X.", 1:3)
+        X_outcome <- paste0("X.", 1:3)
         
       } else if (method == "smart"){
-        X_treatment <- paste0("X.", 1:2)
-        X_outcome <- paste0("X.", 1:5)
+        X_treatment <- paste0("X.", 2:3)
+        X_outcome <- paste0("X.", 1:3)
         
       } else if (method == "minimal"){
-        X_treatment <- paste0("X.", 1:2)
-        X_outcome <- paste0("X.", 1:2)
+        X_treatment <- paste0("X.", 2:3)
+        X_outcome <- paste0("X.", 2:3)
         
         
       } else {
@@ -109,4 +109,4 @@ for (sample.size in c(300, 1000, 3000, 10000)){
   }
 }
 
-write.csv(x=results.linear, file="./data/synthetic_A.csv")
+write.csv(x=results.linear, file="./data/synthetic_C.csv")

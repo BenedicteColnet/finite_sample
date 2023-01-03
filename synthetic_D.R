@@ -34,7 +34,7 @@ for (sample.size in c(300, 1000, 3000, 10000)){
   for (i in 1:50){
     
     # generate a simulation
-    a_simulation <- generate_simulation_wager_nie(n = sample.size, setup = "A", all_covariates_output = TRUE)
+    a_simulation <- generate_simulation_wager_nie(n = sample.size, setup = "D", all_covariates_output = TRUE)
     
     # choose subset
     for (method in different_subset_tested){
@@ -54,7 +54,6 @@ for (sample.size in c(300, 1000, 3000, 10000)){
       } else {
         stop("error in subset.")
       }
-      
       
       custom_ipw <- ipw_forest(covariates_names = X_treatment, 
                                dataframe = a_simulation,
@@ -109,4 +108,4 @@ for (sample.size in c(300, 1000, 3000, 10000)){
   }
 }
 
-write.csv(x=results.linear, file="./data/synthetic_A.csv")
+write.csv(x=results.linear, file="./data/synthetic_D.csv")

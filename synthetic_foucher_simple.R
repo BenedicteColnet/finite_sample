@@ -13,6 +13,9 @@ library(mvtnorm) # rmvnorm
 library(tmle)
 library(SuperLearner)
 library(AIPW)
+library(DoubleML)
+library(mlr3)
+library(mlr3learners)
 
 source("estimators.R")
 source("generate_data_models.R")
@@ -36,16 +39,16 @@ for (sample.size in c(300, 1000, 3000, 10000, 30000)){
     # choose subset
     for (method in different_subset_tested){
       if (method == "extended"){
-        X_treatment <- paste0("X.", c(3, 11, 15, 7, 19, 2, 10, 6, 18, 14))
-        X_outcome <- paste0("X.", c(3, 11, 15, 7, 19, 2, 10, 6, 18, 14))
+        X_treatment <- paste0("X.", c(1, 2, 4, 5, 3, 6))
+        X_outcome <- paste0("X.", c(1, 2, 4, 5, 3, 6))
         
       } else if (method == "smart"){
-        X_treatment <- paste0("X.", c(3, 11, 15, 7, 19))
-        X_outcome <- paste0("X.", c(3, 11, 15, 7, 19, 2, 10, 6, 18, 14))
+        X_treatment <- paste0("X.", c(1, 2, 4, 5))
+        X_outcome <- paste0("X.", c(1, 2, 4, 5, 3, 6))
         
       } else if (method == "minimal"){
-        X_treatment <- paste0("X.", c(3, 11, 15, 7, 19))
-        X_outcome <-paste0("X.", c(3, 11, 15, 7, 19))
+        X_treatment <- paste0("X.", c(1, 2, 4, 5))
+        X_outcome <- paste0("X.", c(1, 2, 4, 5))
         
         
       } else {
@@ -56,15 +59,18 @@ for (sample.size in c(300, 1000, 3000, 10000, 30000)){
       custom_aipw <- aipw_forest(X_treatment,
                                  X_outcome,
                                  dataframe = a_simulation,
+                                 outcome_name = "Y",
+                                 treatment_name = "A",
                                  min.node.size.if.forest = 5,
                                  n.folds = 2,
+                                 outcome_nature = "binary",
                                  return.decomposition = FALSE)
-
-
+      
+      
       custom_aipw_linear <- aipw_linear(X_treatment,
-                  X_outcome,
-                  dataframe = a_simulation,
-                  n.folds = 2)
+                                        X_outcome,
+                                        dataframe = a_simulation,
+                                        n.folds = 2)
       
       
       wrapper_for_grf <- causal_forest_wrapper(X_outcome, dataframe = a_simulation)
@@ -88,7 +94,7 @@ for (sample.size in c(300, 1000, 3000, 10000, 30000)){
                             "subset" = rep(method, 8),
                             "nuisance" = c('forest', 'forest', 'forest', "linear", "linear", "linear", "forest", "forest"))
       
-                            
+      
       results.linear <- rbind(results.linear, new.row)
     }
   }

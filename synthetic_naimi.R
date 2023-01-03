@@ -29,26 +29,26 @@ results.linear <- data.frame("sample.size" = c(),
 different_subset_tested <- c("extended",
                              "minimal")
 
-for (sample.size in c(300, 1000, 3000, 10000)){
+for (sample.size in c(300, 1000, 3000)){
   print(paste0("Starting sample size ", sample.size))
   for (i in 1:50){
     
     # generate a simulation
-    a_simulation <- generate_simulation_wager_nie(n = sample.size, setup = "A", all_covariates_output = TRUE)
+    a_simulation <- generate_simulation_naimi_kennedy(n = sample.size, all_covariates_output = TRUE)
     
     # choose subset
     for (method in different_subset_tested){
       if (method == "extended"){
-        X_treatment <- paste0("X.", 1:5)
-        X_outcome <- paste0("X.", 1:5)
+        X_treatment <- paste0("X.", 1:6)
+        X_outcome <- paste0("X.", 1:6)
         
       } else if (method == "smart"){
-        X_treatment <- paste0("X.", 1:2)
-        X_outcome <- paste0("X.", 1:5)
+        X_treatment <- paste0("X.", 1:4)
+        X_outcome <- paste0("X.", 1:6)
         
       } else if (method == "minimal"){
-        X_treatment <- paste0("X.", 1:2)
-        X_outcome <- paste0("X.", 1:2)
+        X_treatment <- paste0("X.", 1:4)
+        X_outcome <- paste0("X.", 1:4)
         
         
       } else {
@@ -109,4 +109,4 @@ for (sample.size in c(300, 1000, 3000, 10000)){
   }
 }
 
-write.csv(x=results.linear, file="./data/synthetic_A.csv")
+write.csv(x=results.linear, file="./data/synthetic_naimi.csv")
